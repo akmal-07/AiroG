@@ -2,17 +2,17 @@ import React from 'react';
 
 export const Header: React.FC = () => {
   return (
-    <header className="border-b border-slate-200 bg-white shadow-sm" role="banner">
-      <div className="mx-auto max-w-5xl px-4 py-5 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-50 border-b border-black/5 bg-white/80 backdrop-blur-md shadow-2xs" role="banner">
+      <div className="mx-auto max-w-5xl px-4 py-4 sm:px-6 lg:px-8">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3">
-            {/* Guardian & Air vector mark (no emojis) */}
+          <div className="flex items-center gap-3.5">
+            {/* Minimalist Charcoal & Air vector mark (zero emojis) */}
             <div
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-teal-600 text-white shadow-sm"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#1D1D1F] text-white shadow-xs"
               aria-hidden="true"
             >
               <svg
-                className="h-6 w-6"
+                className="h-5 w-5"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -28,12 +28,12 @@ export const Header: React.FC = () => {
             </div>
             <div>
               <div className="flex items-baseline gap-2">
-                <h1 className="text-2xl font-bold tracking-tight text-slate-900">AiroG</h1>
-                <span className="text-sm font-medium text-teal-700">
+                <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#1D1D1F]">AiroG</h1>
+                <span className="text-xs sm:text-sm font-medium text-[#0071E3]">
                   Clear air, made simple.
                 </span>
               </div>
-              <p className="text-sm text-slate-600">
+              <p className="text-xs sm:text-sm text-[#6E6E73]">
                 GenAI air-quality assistant helping Indian families make safer daily decisions during winter smog.
               </p>
             </div>

@@ -26,14 +26,14 @@ const PlanSectionSkeleton: React.FC = () => (
   <div
     role="status"
     aria-label="Loading today's action plan section"
-    className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8 animate-pulse space-y-4"
+    className="rounded-3xl border border-black/5 bg-white p-6 sm:p-8 shadow-apple animate-pulse space-y-4"
   >
-    <div className="h-6 w-56 rounded-md bg-slate-200" />
-    <div className="h-4 w-72 rounded-md bg-slate-100" />
+    <div className="h-6 w-56 rounded-md bg-[#E5E5EA]" />
+    <div className="h-4 w-72 rounded-md bg-[#F5F5F7]" />
     <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-      <div className="h-24 rounded-xl bg-slate-100" />
-      <div className="h-24 rounded-xl bg-slate-100" />
-      <div className="h-24 rounded-xl bg-slate-100" />
+      <div className="h-28 rounded-2xl bg-[#F5F5F7]" />
+      <div className="h-28 rounded-2xl bg-[#F5F5F7]" />
+      <div className="h-28 rounded-2xl bg-[#F5F5F7]" />
     </div>
   </div>
 );
@@ -188,13 +188,13 @@ export const App: React.FC = () => {
   }, [aqiResult, plan, household]);
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900">
+    <div className="flex min-h-screen flex-col bg-[#F5F5F7] text-[#1D1D1F]">
       <Header />
 
-      <main className="flex-1 py-8" role="main">
+      <main className="flex-1 py-8 sm:py-10" role="main">
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 space-y-8">
           {/* City Selection Bar */}
-          <section aria-labelledby="city-search-heading" className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+          <section aria-labelledby="city-search-heading" className="rounded-3xl border border-black/5 bg-white p-5 sm:p-7 shadow-apple space-y-4">
             <h2 id="city-search-heading" className="sr-only">
               City Selection
             </h2>
@@ -204,7 +204,7 @@ export const App: React.FC = () => {
                 <label htmlFor="city-input" className="sr-only">
                   Enter city name
                 </label>
-                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400" aria-hidden="true">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-[#86868B]" aria-hidden="true">
                   <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="11" cy="11" r="8" />
                     <path d="m21 21-4.3-4.3" />
@@ -217,18 +217,18 @@ export const App: React.FC = () => {
                   value={cityInput}
                   onChange={(e) => setCityInput(e.target.value)}
                   placeholder="Enter any Indian city (e.g., Delhi, Mumbai, Tirupati)..."
-                  className="w-full rounded-xl border border-slate-300 bg-slate-50/50 py-2.5 pl-10 pr-4 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:border-teal-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                  className="w-full rounded-2xl border border-black/10 bg-[#F5F5F7] py-3 pl-11 pr-4 text-sm font-medium text-[#1D1D1F] placeholder:text-[#86868B] transition focus:border-[#0071E3] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#0071E3]/20"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={loadingAqi}
-                className="inline-flex items-center justify-center rounded-xl bg-teal-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600 disabled:opacity-50"
+                className="inline-flex items-center justify-center rounded-2xl bg-[#0071E3] hover:bg-[#0077ED] px-6 py-3 text-sm font-semibold text-white shadow-xs transition active:scale-98 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0071E3] disabled:opacity-50"
               >
                 {loadingAqi ? (
                   <span className="flex items-center gap-2">
-                    <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                    <svg className="h-4 w-4 animate-spin text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                       <circle cx="12" cy="12" r="10" strokeDasharray="32" strokeLinecap="round" />
                     </svg>
                     Checking...
@@ -240,9 +240,9 @@ export const App: React.FC = () => {
             </form>
 
             {/* Quick-pick Indian cities */}
-            <div className="mt-4 flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100">
-              <span className="text-xs font-medium text-slate-500">Quick select:</span>
-              <div className="flex flex-wrap gap-1.5" role="group" aria-label="Quick select cities">
+            <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-black/5">
+              <span className="text-xs font-semibold text-[#6E6E73]">Quick select:</span>
+              <div className="flex flex-wrap gap-2" role="group" aria-label="Quick select cities">
                 {POPULAR_CITIES.map((c) => {
                   const isSelected = activeCity.toLowerCase() === c.toLowerCase();
                   return (
@@ -251,10 +251,10 @@ export const App: React.FC = () => {
                       type="button"
                       aria-pressed={isSelected}
                       onClick={() => handleCitySelect(c)}
-                      className={`rounded-lg px-2.5 py-1 text-xs font-medium transition focus-visible:outline-2 focus-visible:outline-teal-600 ${
+                      className={`rounded-full px-3.5 py-1 text-xs font-semibold transition active:scale-95 focus-visible:outline-2 focus-visible:outline-[#0071E3] ${
                         isSelected
-                          ? 'bg-teal-100 text-teal-800 ring-1 ring-teal-400 font-semibold'
-                          : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                          ? 'bg-[#1D1D1F] text-white shadow-xs'
+                          : 'bg-[#F5F5F7] text-[#1D1D1F] hover:bg-[#E8E8ED] border border-black/5'
                       }`}
                     >
                       {c}
@@ -270,14 +270,14 @@ export const App: React.FC = () => {
             <section
               role="status"
               aria-live="polite"
-              className="flex flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white p-12 text-center shadow-sm"
+              className="flex flex-col items-center justify-center rounded-3xl border border-black/5 bg-white p-12 text-center shadow-apple"
             >
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-teal-50 text-teal-600">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-[#0071E3]">
                 <svg className="h-6 w-6 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                   <circle cx="12" cy="12" r="10" strokeDasharray="32" strokeLinecap="round" />
                 </svg>
               </div>
-              <p className="mt-3 text-sm font-medium text-slate-700">
+              <p className="mt-4 text-sm font-medium text-[#1D1D1F]">
                 Fetching CPCB air quality and hourly forecast for {cityInput}...
               </p>
               <span className="sr-only">Loading air quality data</span>
@@ -288,11 +288,11 @@ export const App: React.FC = () => {
           {!loadingAqi && aqiError && (
             <section
               role="alert"
-              className="rounded-2xl border border-rose-200 bg-rose-50 p-6 shadow-sm"
+              className="rounded-3xl border border-rose-200 bg-rose-50/80 p-6 shadow-apple"
             >
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-start gap-3">
-                  <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-rose-100 text-rose-700" aria-hidden="true">
+                <div className="flex items-start gap-3.5">
+                  <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-rose-100 text-rose-700" aria-hidden="true">
                     <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="12" cy="12" r="10" />
                       <line x1="12" y1="8" x2="12" y2="12" />
@@ -300,14 +300,14 @@ export const App: React.FC = () => {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="text-sm font-semibold text-rose-900">Unable to retrieve air quality data</h3>
-                    <p className="mt-1 text-sm text-rose-700">{aqiError}</p>
+                    <h3 className="text-sm font-bold text-rose-950">Unable to retrieve air quality data</h3>
+                    <p className="mt-1 text-sm text-rose-800">{aqiError}</p>
                   </div>
                 </div>
                 <button
                   type="button"
                   onClick={handleRetryAqi}
-                  className="inline-flex items-center justify-center rounded-xl bg-white px-4 py-2 text-xs font-semibold text-rose-800 shadow-sm ring-1 ring-rose-300 hover:bg-rose-100 transition focus-visible:outline-2 focus-visible:outline-rose-600"
+                  className="inline-flex items-center justify-center rounded-full bg-white px-4 py-2 text-xs font-semibold text-rose-900 shadow-2xs ring-1 ring-rose-300 hover:bg-rose-100 transition active:scale-95 focus-visible:outline-[#0071E3]"
                 >
                   <svg className="mr-1.5 h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
@@ -325,18 +325,18 @@ export const App: React.FC = () => {
           {!loadingAqi && !aqiError && aqiResult && (
             <section
               aria-labelledby="live-aqi-heading"
-              className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+              className="rounded-3xl border border-black/5 bg-white p-6 sm:p-8 shadow-apple space-y-6"
             >
               {/* Card Header: City + Updated + Demo Data Badge */}
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-5">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-black/5 pb-5">
                 <div>
                   <div className="flex items-center gap-2.5">
-                    <h2 id="live-aqi-heading" className="text-2xl font-bold tracking-tight text-slate-900">
+                    <h2 id="live-aqi-heading" className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#1D1D1F]">
                       {aqiResult.reading.city}
                     </h2>
                     {aqiResult.isDemo && (
                       <span
-                        className="inline-flex items-center gap-1 rounded-md bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-800 ring-1 ring-inset ring-amber-300"
+                        className="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-2.5 py-0.5 text-xs font-semibold text-amber-800"
                         title="Using curated Indian demo dataset. Configure OPENWEATHER_API_KEY for live readings."
                       >
                         <span className="h-1.5 w-1.5 rounded-full bg-amber-500" aria-hidden="true" />
@@ -344,7 +344,7 @@ export const App: React.FC = () => {
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-slate-500 mt-0.5">
+                  <p className="text-xs sm:text-sm text-[#6E6E73] mt-1">
                     Indian CPCB Scale &bull; Updated {new Date(aqiResult.reading.updatedAt).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true })}
                   </p>
                 </div>
@@ -355,43 +355,43 @@ export const App: React.FC = () => {
               </div>
 
               {/* Pollutants + Best Window Highlights Grid */}
-              <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {/* PM2.5 */}
-                <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-4">
-                  <div className="flex items-center justify-between text-xs text-slate-500">
-                    <span className="font-semibold text-slate-700">PM2.5</span>
+                <div className="rounded-2xl border border-black/5 bg-[#F5F5F7] p-4.5 transition-all">
+                  <div className="flex items-center justify-between text-xs text-[#6E6E73]">
+                    <span className="font-semibold text-[#1D1D1F]">PM2.5</span>
                     <span>Primary Smog</span>
                   </div>
                   <div className="mt-2 flex items-baseline gap-1">
-                    <span className="text-2xl font-extrabold tabular-nums text-slate-900">
+                    <span className="text-2xl font-extrabold tabular-nums tracking-tight text-[#1D1D1F]">
                       {aqiResult.reading.pm25 !== undefined ? Math.round(aqiResult.reading.pm25) : '—'}
                     </span>
-                    <span className="text-xs text-slate-500">&mu;g/m&sup3;</span>
+                    <span className="text-xs text-[#6E6E73]">&mu;g/m&sup3;</span>
                   </div>
-                  <p className="mt-1 text-xs text-slate-600">
+                  <p className="mt-1 text-xs text-[#6E6E73]">
                     Fine inhalable particles from smoke & vehicles.
                   </p>
                 </div>
 
                 {/* PM10 */}
-                <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-4">
-                  <div className="flex items-center justify-between text-xs text-slate-500">
-                    <span className="font-semibold text-slate-700">PM10</span>
+                <div className="rounded-2xl border border-black/5 bg-[#F5F5F7] p-4.5 transition-all">
+                  <div className="flex items-center justify-between text-xs text-[#6E6E73]">
+                    <span className="font-semibold text-[#1D1D1F]">PM10</span>
                     <span>Coarse Dust</span>
                   </div>
                   <div className="mt-2 flex items-baseline gap-1">
-                    <span className="text-2xl font-extrabold tabular-nums text-slate-900">
+                    <span className="text-2xl font-extrabold tabular-nums tracking-tight text-[#1D1D1F]">
                       {aqiResult.reading.pm10 !== undefined ? Math.round(aqiResult.reading.pm10) : '—'}
                     </span>
-                    <span className="text-xs text-slate-500">&mu;g/m&sup3;</span>
+                    <span className="text-xs text-[#6E6E73]">&mu;g/m&sup3;</span>
                   </div>
-                  <p className="mt-1 text-xs text-slate-600">
+                  <p className="mt-1 text-xs text-[#6E6E73]">
                     Coarse dust, road emissions, and construction debris.
                   </p>
                 </div>
 
                 {/* Best Outdoor Window */}
-                <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-4">
+                <div className="rounded-2xl border border-emerald-200/80 bg-emerald-50/60 p-4.5 transition-all">
                   <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-800">
                     <svg className="h-4 w-4 text-emerald-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                       <circle cx="12" cy="12" r="10" />
@@ -399,16 +399,16 @@ export const App: React.FC = () => {
                     </svg>
                     <span>Best Window Today</span>
                   </div>
-                  <div className="mt-2 text-base font-bold text-emerald-950">
+                  <div className="mt-2 text-base font-bold tracking-tight text-emerald-950">
                     {aqiResult.bestWindow.windowText}
                   </div>
-                  <p className="mt-1 text-xs text-emerald-800">
+                  <p className="mt-1 text-xs text-emerald-850">
                     Lowest-AQI stretch (~{aqiResult.bestWindow.averageAqi} AQI). Safer for errands.
                   </p>
                 </div>
 
                 {/* Peak Smog Hour */}
-                <div className="rounded-xl border border-rose-200 bg-rose-50/70 p-4">
+                <div className="rounded-2xl border border-rose-200/80 bg-rose-50/60 p-4.5 transition-all">
                   <div className="flex items-center gap-1.5 text-xs font-semibold text-rose-800">
                     <svg className="h-4 w-4 text-rose-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                       <polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2" />
@@ -417,10 +417,10 @@ export const App: React.FC = () => {
                     </svg>
                     <span>Peak Smog Hour</span>
                   </div>
-                  <div className="mt-2 text-base font-bold text-rose-950">
+                  <div className="mt-2 text-base font-bold tracking-tight text-rose-950">
                     Around {aqiResult.bestWindow.peakHour}
                   </div>
-                  <p className="mt-1 text-xs text-rose-800">
+                  <p className="mt-1 text-xs text-rose-850">
                     Highest pollution peak (~{aqiResult.bestWindow.peakAqi} AQI). Keep windows closed.
                   </p>
                 </div>

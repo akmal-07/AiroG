@@ -30,7 +30,7 @@ const AqiBadgeComponent: React.FC<AqiBadgeProps> = ({
 
   const sizeClasses = {
     sm: 'text-xs px-2.5 py-0.5 gap-1.5',
-    md: 'text-sm px-3 py-1 gap-2',
+    md: 'text-sm px-3.5 py-1 gap-2',
     lg: 'text-base px-4 py-1.5 gap-2.5 font-semibold',
     xl: 'text-lg px-5 py-2 gap-3 font-bold',
   }[size];
@@ -50,7 +50,7 @@ const AqiBadgeComponent: React.FC<AqiBadgeProps> = ({
     <span
       role="status"
       aria-label={accessibleLabel}
-      className={`inline-flex items-center rounded-full border font-medium ${band.badgeBg} ${band.badgeText} ${band.badgeBorder} ${sizeClasses} ${className}`}
+      className={`inline-flex items-center rounded-full border font-semibold tracking-tight shadow-2xs ${band.badgeBg} ${band.badgeText} ${band.badgeBorder} ${sizeClasses} ${className}`}
     >
       <span
         className={`rounded-full shrink-0 ${band.dotColor} ${dotSizes}`}

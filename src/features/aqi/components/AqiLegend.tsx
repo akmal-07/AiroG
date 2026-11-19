@@ -6,47 +6,47 @@ const AqiLegendComponent: React.FC = () => {
   return (
     <section
       aria-labelledby="aqi-scale-heading"
-      className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"
+      className="rounded-3xl border border-black/5 bg-white p-6 sm:p-8 shadow-apple space-y-5"
     >
-      <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between border-b border-black/5 pb-4">
         <div>
-          <h2 id="aqi-scale-heading" className="text-base font-semibold text-slate-900">
+          <h2 id="aqi-scale-heading" className="text-lg font-bold tracking-tight text-[#1D1D1F]">
             CPCB Air Quality Index (India Scale)
           </h2>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs sm:text-sm text-[#6E6E73]">
             Central Pollution Control Board 6-band standard. Every band pairs color with explicit text.
           </p>
         </div>
-        <span className="self-start rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600 sm:self-auto">
+        <span className="self-start rounded-full bg-[#F5F5F7] border border-black/5 px-3 py-1 text-xs font-semibold text-[#1D1D1F] sm:self-auto">
           Official CPCB Standard
         </span>
       </div>
 
       <ol
-        className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3"
+        className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3"
         aria-label="CPCB AQI Categories"
       >
         {CPCB_BANDS.map((band) => (
           <li
             key={band.key}
-            className={`flex items-start justify-between rounded-xl border p-3 transition-colors ${band.badgeBg} ${band.badgeBorder}`}
+            className={`flex items-start justify-between rounded-2xl border p-3.5 transition-all shadow-2xs ${band.badgeBg} ${band.badgeBorder}`}
           >
             <div className="flex flex-col gap-1 pr-2">
               <div className="flex items-center gap-2">
                 <span
-                  className={`h-3 w-3 shrink-0 rounded-full ${band.dotColor}`}
+                  className={`h-2.5 w-2.5 shrink-0 rounded-full ${band.dotColor}`}
                   aria-hidden="true"
                 />
-                <span className={`text-sm font-bold ${band.badgeText}`}>
+                <span className={`text-sm font-bold tracking-tight ${band.badgeText}`}>
                   {band.label}
                 </span>
               </div>
-              <p className="text-xs leading-relaxed text-slate-700">
+              <p className="text-xs leading-relaxed text-[#1D1D1F]/80">
                 {band.healthAdvisory}
               </p>
             </div>
             <span
-              className={`shrink-0 rounded-md bg-white/80 px-2 py-0.5 text-xs font-semibold tabular-nums shadow-xs ${band.badgeText}`}
+              className={`shrink-0 rounded-lg bg-white/90 border border-black/5 px-2 py-0.5 text-xs font-bold tabular-nums shadow-2xs ${band.badgeText}`}
               aria-label={`AQI range ${band.rangeText}`}
             >
               {band.rangeText}
@@ -55,9 +55,9 @@ const AqiLegendComponent: React.FC = () => {
         ))}
       </ol>
 
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3 text-xs text-slate-500">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-black/5 pt-4 text-xs text-[#6E6E73]">
         <span>Standard breakpoints based on 24-hr PM2.5 and PM10 concentrations.</span>
-        <div className="flex items-center gap-1.5 font-medium text-slate-700">
+        <div className="flex items-center gap-2 font-medium text-[#1D1D1F]">
           <span>Example:</span>
           <AqiBadge aqi={312} size="sm" />
         </div>

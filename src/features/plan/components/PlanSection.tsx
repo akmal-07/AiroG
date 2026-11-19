@@ -43,34 +43,34 @@ export const PlanSectionComponent: React.FC<PlanSectionProps> = ({
   return (
     <section
       aria-labelledby="plan-section-heading"
-      className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8 space-y-6"
+      className="rounded-3xl border border-black/5 bg-white p-6 sm:p-8 shadow-apple space-y-6"
     >
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-5">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-black/5 pb-5">
         <div>
           <div className="flex items-center gap-2.5">
-            <h2 id="plan-section-heading" className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
+            <h2 id="plan-section-heading" className="text-xl sm:text-2xl font-bold tracking-tight text-[#1D1D1F]">
               Today's Low-Emission Day Plan
             </h2>
             {plan && (
               <span
-                className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold ${
+                className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                   plan.planType === 'standard plan'
-                    ? 'bg-slate-100 text-slate-700 ring-1 ring-slate-300'
-                    : 'bg-teal-50 text-teal-800 ring-1 ring-teal-300'
+                    ? 'bg-[#F5F5F7] text-[#1D1D1F] border border-black/10'
+                    : 'bg-blue-50 text-[#0071E3] border border-blue-200'
                 }`}
               >
                 {plan.planType === 'standard plan' ? 'standard plan' : 'AI-tailored'}
               </span>
             )}
           </div>
-          <p className="text-xs text-slate-500 mt-1">
+          <p className="text-xs sm:text-sm text-[#6E6E73] mt-1">
             Actions tailored to {activeCity}'s smog conditions and your household profile.
           </p>
         </div>
 
         {loadingPlan && (
-          <div className="flex items-center gap-2 text-xs font-medium text-teal-700" role="status">
-            <svg className="h-4 w-4 animate-spin text-teal-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+          <div className="flex items-center gap-2 text-xs font-medium text-[#0071E3]" role="status">
+            <svg className="h-4 w-4 animate-spin text-[#0071E3]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
               <circle cx="12" cy="12" r="10" strokeDasharray="32" strokeLinecap="round" />
             </svg>
             <span>Drafting tailored plan...</span>
@@ -80,13 +80,13 @@ export const PlanSectionComponent: React.FC<PlanSectionProps> = ({
 
       {/* Plan Error State */}
       {planError && (
-        <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-4">
+        <div role="alert" className="rounded-2xl border border-rose-200 bg-rose-50/70 p-4">
           <div className="flex items-center justify-between">
             <p className="text-xs font-medium text-rose-800">{planError}</p>
             <button
               type="button"
               onClick={onRetryPlan}
-              className="rounded-lg bg-white px-2.5 py-1 text-xs font-semibold text-rose-800 ring-1 ring-rose-300 hover:bg-rose-100 transition focus-visible:outline-rose-600"
+              className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-rose-800 ring-1 ring-rose-300 hover:bg-rose-100 transition focus-visible:outline-[#0071E3]"
             >
               Retry Plan
             </button>
@@ -94,13 +94,15 @@ export const PlanSectionComponent: React.FC<PlanSectionProps> = ({
         </div>
       )}
 
-      {/* ImpactBar Day Summary Component */}
+      {/* ImpactBar Day Summary Component with WhatsApp Share */}
       {daySummary && aqiResult && (
         <ImpactBar
           summary={daySummary}
           aqi={aqiResult.reading.aqi}
           category={aqiResult.reading.category}
           bestWindow={aqiResult.bestWindow}
+          city={activeCity}
+          items={plan?.items}
         />
       )}
 
@@ -114,8 +116,8 @@ export const PlanSectionComponent: React.FC<PlanSectionProps> = ({
             return (
               <div key={key} className="space-y-3">
                 <div>
-                  <h3 className="text-sm font-bold text-slate-800">{title}</h3>
-                  <p className="text-xs text-slate-500">{subtitle}</p>
+                  <h3 className="text-sm font-bold tracking-tight text-[#1D1D1F]">{title}</h3>
+                  <p className="text-xs text-[#6E6E73]">{subtitle}</p>
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -132,7 +134,7 @@ export const PlanSectionComponent: React.FC<PlanSectionProps> = ({
       {/* Empty State before AQI loads */}
       {!plan && !loadingPlan && !planError && (
         <div className="py-8 text-center">
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-[#6E6E73]">
             Select a city to generate today's personalized low-emission action plan.
           </p>
         </div>

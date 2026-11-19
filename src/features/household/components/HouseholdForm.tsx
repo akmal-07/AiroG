@@ -42,25 +42,25 @@ const HouseholdFormComponent: React.FC<HouseholdFormProps> = ({ onHouseholdChang
   return (
     <section
       aria-labelledby="household-form-heading"
-      className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"
+      className="rounded-3xl border border-black/5 bg-white p-6 sm:p-8 shadow-apple space-y-6"
     >
-      <div className="flex flex-col gap-1 border-b border-slate-100 pb-4">
-        <h2 id="household-form-heading" className="text-base font-semibold text-slate-900">
+      <div className="flex flex-col gap-1 border-b border-black/5 pb-4">
+        <h2 id="household-form-heading" className="text-lg font-bold tracking-tight text-[#1D1D1F]">
           Household Profile
         </h2>
-        <p className="text-xs text-slate-500">
+        <p className="text-xs sm:text-sm text-[#6E6E73]">
           Personalize exposure recommendations and indoor protective measures for your family.
         </p>
       </div>
 
-      <div className="mt-5 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         {/* Adults Stepper */}
-        <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50/50 p-3.5">
+        <div className="flex items-center justify-between rounded-2xl border border-black/5 bg-[#F5F5F7] p-4 transition-all">
           <div>
-            <label htmlFor="adults-count" className="text-sm font-semibold text-slate-900">
+            <span id="adults-label" className="text-sm font-semibold tracking-tight text-[#1D1D1F]">
               Adults
-            </label>
-            <p className="text-xs text-slate-500">Ages 18–60</p>
+            </span>
+            <p className="text-xs text-[#6E6E73]">Ages 18–60</p>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -68,9 +68,9 @@ const HouseholdFormComponent: React.FC<HouseholdFormProps> = ({ onHouseholdChang
               onClick={() => updateCount('adults', -1)}
               disabled={household.adults <= 0}
               aria-label="Decrease adult count"
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-700 shadow-xs hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-teal-600 disabled:opacity-40"
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-[#1D1D1F] border border-black/10 shadow-2xs hover:bg-[#E8E8ED] transition active:scale-95 focus-visible:outline-2 focus-visible:outline-[#0071E3] disabled:opacity-30 disabled:pointer-events-none"
             >
-              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
                 <line x1="5" y1="12" x2="19" y2="12" />
               </svg>
             </button>
@@ -78,8 +78,8 @@ const HouseholdFormComponent: React.FC<HouseholdFormProps> = ({ onHouseholdChang
               id="adults-count"
               role="status"
               aria-live="polite"
-              aria-label={`${household.adults} adults`}
-              className="w-6 text-center text-sm font-bold tabular-nums text-slate-900"
+              aria-labelledby="adults-label adults-count"
+              className="w-7 text-center text-base font-bold tabular-nums text-[#1D1D1F]"
             >
               {household.adults}
             </span>
@@ -88,9 +88,9 @@ const HouseholdFormComponent: React.FC<HouseholdFormProps> = ({ onHouseholdChang
               onClick={() => updateCount('adults', 1)}
               disabled={household.adults >= 20}
               aria-label="Increase adult count"
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-700 shadow-xs hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-teal-600 disabled:opacity-40"
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-[#1D1D1F] border border-black/10 shadow-2xs hover:bg-[#E8E8ED] transition active:scale-95 focus-visible:outline-2 focus-visible:outline-[#0071E3] disabled:opacity-30 disabled:pointer-events-none"
             >
-              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
                 <line x1="12" y1="5" x2="12" y2="19" />
                 <line x1="5" y1="12" x2="19" y2="12" />
               </svg>
@@ -99,12 +99,12 @@ const HouseholdFormComponent: React.FC<HouseholdFormProps> = ({ onHouseholdChang
         </div>
 
         {/* Children Stepper */}
-        <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50/50 p-3.5">
+        <div className="flex items-center justify-between rounded-2xl border border-black/5 bg-[#F5F5F7] p-4 transition-all">
           <div>
-            <label htmlFor="children-count" className="text-sm font-semibold text-slate-900">
+            <span id="children-label" className="text-sm font-semibold tracking-tight text-[#1D1D1F]">
               Children
-            </label>
-            <p className="text-xs text-slate-500">Under 18 years</p>
+            </span>
+            <p className="text-xs text-[#6E6E73]">Under 18 years</p>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -112,9 +112,9 @@ const HouseholdFormComponent: React.FC<HouseholdFormProps> = ({ onHouseholdChang
               onClick={() => updateCount('children', -1)}
               disabled={household.children <= 0}
               aria-label="Decrease children count"
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-700 shadow-xs hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-teal-600 disabled:opacity-40"
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-[#1D1D1F] border border-black/10 shadow-2xs hover:bg-[#E8E8ED] transition active:scale-95 focus-visible:outline-2 focus-visible:outline-[#0071E3] disabled:opacity-30 disabled:pointer-events-none"
             >
-              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
                 <line x1="5" y1="12" x2="19" y2="12" />
               </svg>
             </button>
@@ -122,8 +122,8 @@ const HouseholdFormComponent: React.FC<HouseholdFormProps> = ({ onHouseholdChang
               id="children-count"
               role="status"
               aria-live="polite"
-              aria-label={`${household.children} children`}
-              className="w-6 text-center text-sm font-bold tabular-nums text-slate-900"
+              aria-labelledby="children-label children-count"
+              className="w-7 text-center text-base font-bold tabular-nums text-[#1D1D1F]"
             >
               {household.children}
             </span>
@@ -132,9 +132,9 @@ const HouseholdFormComponent: React.FC<HouseholdFormProps> = ({ onHouseholdChang
               onClick={() => updateCount('children', 1)}
               disabled={household.children >= 20}
               aria-label="Increase children count"
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-700 shadow-xs hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-teal-600 disabled:opacity-40"
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-[#1D1D1F] border border-black/10 shadow-2xs hover:bg-[#E8E8ED] transition active:scale-95 focus-visible:outline-2 focus-visible:outline-[#0071E3] disabled:opacity-30 disabled:pointer-events-none"
             >
-              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
                 <line x1="12" y1="5" x2="12" y2="19" />
                 <line x1="5" y1="12" x2="19" y2="12" />
               </svg>
@@ -143,12 +143,12 @@ const HouseholdFormComponent: React.FC<HouseholdFormProps> = ({ onHouseholdChang
         </div>
 
         {/* Elders Stepper */}
-        <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50/50 p-3.5">
+        <div className="flex items-center justify-between rounded-2xl border border-black/5 bg-[#F5F5F7] p-4 transition-all">
           <div>
-            <label htmlFor="elders-count" className="text-sm font-semibold text-slate-900">
+            <span id="elders-label" className="text-sm font-semibold tracking-tight text-[#1D1D1F]">
               Elders
-            </label>
-            <p className="text-xs text-slate-500">Ages 60+</p>
+            </span>
+            <p className="text-xs text-[#6E6E73]">Ages 60+</p>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -156,9 +156,9 @@ const HouseholdFormComponent: React.FC<HouseholdFormProps> = ({ onHouseholdChang
               onClick={() => updateCount('elders', -1)}
               disabled={household.elders <= 0}
               aria-label="Decrease elders count"
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-700 shadow-xs hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-teal-600 disabled:opacity-40"
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-[#1D1D1F] border border-black/10 shadow-2xs hover:bg-[#E8E8ED] transition active:scale-95 focus-visible:outline-2 focus-visible:outline-[#0071E3] disabled:opacity-30 disabled:pointer-events-none"
             >
-              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
                 <line x1="5" y1="12" x2="19" y2="12" />
               </svg>
             </button>
@@ -166,8 +166,8 @@ const HouseholdFormComponent: React.FC<HouseholdFormProps> = ({ onHouseholdChang
               id="elders-count"
               role="status"
               aria-live="polite"
-              aria-label={`${household.elders} elders`}
-              className="w-6 text-center text-sm font-bold tabular-nums text-slate-900"
+              aria-labelledby="elders-label elders-count"
+              className="w-7 text-center text-base font-bold tabular-nums text-[#1D1D1F]"
             >
               {household.elders}
             </span>
@@ -176,9 +176,9 @@ const HouseholdFormComponent: React.FC<HouseholdFormProps> = ({ onHouseholdChang
               onClick={() => updateCount('elders', 1)}
               disabled={household.elders >= 20}
               aria-label="Increase elders count"
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-700 shadow-xs hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-teal-600 disabled:opacity-40"
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-[#1D1D1F] border border-black/10 shadow-2xs hover:bg-[#E8E8ED] transition active:scale-95 focus-visible:outline-2 focus-visible:outline-[#0071E3] disabled:opacity-30 disabled:pointer-events-none"
             >
-              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
                 <line x1="12" y1="5" x2="12" y2="19" />
                 <line x1="5" y1="12" x2="19" y2="12" />
               </svg>
@@ -187,59 +187,77 @@ const HouseholdFormComponent: React.FC<HouseholdFormProps> = ({ onHouseholdChang
         </div>
       </div>
 
-      {/* Vulnerabilities & Equipment Toggles */}
-      <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 pt-4 border-t border-slate-100">
+      {/* Tactile iOS-style Toggles */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 pt-2 border-t border-black/5">
         {/* Asthma / Respiratory Toggle */}
-        <label
-          htmlFor="has-asthma-toggle"
-          className={`flex cursor-pointer items-start justify-between rounded-xl border p-3.5 transition focus-within:ring-2 focus-within:ring-teal-500/30 ${
-            household.hasAsthma
-              ? 'border-amber-300 bg-amber-50/50'
-              : 'border-slate-200 bg-slate-50/50 hover:bg-slate-50'
-          }`}
+        <div
+          onClick={() => handleToggle('hasAsthma')}
+          className="flex cursor-pointer items-center justify-between rounded-2xl border border-black/5 bg-[#F5F5F7] p-4 transition-all hover:bg-[#EAEAEA]"
         >
-          <div className="pr-3">
-            <span className="text-sm font-semibold text-slate-900">
-              Asthma / Respiratory Sensitivity
+          <div className="pr-4">
+            <span className="text-sm font-semibold tracking-tight text-[#1D1D1F]">
+              Asthma / Sensitive Airways
             </span>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Household member with asthma, COPD, or chronic bronchitis.
+            <p className="text-xs text-[#6E6E73] mt-0.5">
+              Household member with asthma, COPD, or respiratory sensitivity.
             </p>
           </div>
-          <input
-            id="has-asthma-toggle"
-            type="checkbox"
-            checked={household.hasAsthma}
-            onChange={() => handleToggle('hasAsthma')}
-            className="mt-0.5 h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500 focus-visible:outline-teal-600"
-          />
-        </label>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={household.hasAsthma}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleToggle('hasAsthma');
+            }}
+            className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus-visible:outline-2 focus-visible:outline-[#0071E3] ${
+              household.hasAsthma ? 'bg-[#0071E3]' : 'bg-[#E5E5EA]'
+            }`}
+          >
+            <span className="sr-only">Toggle asthma / respiratory sensitivity</span>
+            <span
+              aria-hidden="true"
+              className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                household.hasAsthma ? 'translate-x-5' : 'translate-x-0'
+              }`}
+            />
+          </button>
+        </div>
 
         {/* Air Purifier Toggle */}
-        <label
-          htmlFor="has-purifier-toggle"
-          className={`flex cursor-pointer items-start justify-between rounded-xl border p-3.5 transition focus-within:ring-2 focus-within:ring-teal-500/30 ${
-            household.hasPurifier
-              ? 'border-teal-300 bg-teal-50/50'
-              : 'border-slate-200 bg-slate-50/50 hover:bg-slate-50'
-          }`}
+        <div
+          onClick={() => handleToggle('hasPurifier')}
+          className="flex cursor-pointer items-center justify-between rounded-2xl border border-black/5 bg-[#F5F5F7] p-4 transition-all hover:bg-[#EAEAEA]"
         >
-          <div className="pr-3">
-            <span className="text-sm font-semibold text-slate-900">
+          <div className="pr-4">
+            <span className="text-sm font-semibold tracking-tight text-[#1D1D1F]">
               HEPA Air Purifier Available
             </span>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-xs text-[#6E6E73] mt-0.5">
               Working indoor mechanical filtration in home.
             </p>
           </div>
-          <input
-            id="has-purifier-toggle"
-            type="checkbox"
-            checked={household.hasPurifier}
-            onChange={() => handleToggle('hasPurifier')}
-            className="mt-0.5 h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500 focus-visible:outline-teal-600"
-          />
-        </label>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={household.hasPurifier}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleToggle('hasPurifier');
+            }}
+            className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus-visible:outline-2 focus-visible:outline-[#0071E3] ${
+              household.hasPurifier ? 'bg-[#0071E3]' : 'bg-[#E5E5EA]'
+            }`}
+          >
+            <span className="sr-only">Toggle HEPA air purifier available</span>
+            <span
+              aria-hidden="true"
+              className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                household.hasPurifier ? 'translate-x-5' : 'translate-x-0'
+              }`}
+            />
+          </button>
+        </div>
       </div>
     </section>
   );
