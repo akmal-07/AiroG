@@ -307,7 +307,7 @@ export const App: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleRetryAqi}
-                  className="inline-flex items-center justify-center rounded-full bg-white px-4 py-2 text-xs font-semibold text-rose-900 shadow-2xs ring-1 ring-rose-300 hover:bg-rose-100 transition active:scale-95 focus-visible:outline-[#0071E3]"
+                  className="inline-flex items-center justify-center rounded-full bg-white px-4 py-2 text-xs font-semibold text-rose-900 shadow-sm ring-1 ring-rose-300 hover:bg-rose-100 transition active:scale-95 focus-visible:outline-[#0071E3]"
                 >
                   <svg className="mr-1.5 h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
@@ -331,7 +331,7 @@ export const App: React.FC = () => {
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-black/5 pb-5">
                 <div>
                   <div className="flex items-center gap-2.5">
-                    <h2 id="live-aqi-heading" className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#1D1D1F]">
+                    <h2 id="live-aqi-heading" className="text-2xl sm:text-3xl font-semibold tracking-tight text-[#1D1D1F]">
                       {aqiResult.reading.city}
                     </h2>
                     {aqiResult.isDemo && (
@@ -354,73 +354,66 @@ export const App: React.FC = () => {
                 </div>
               </div>
 
-              {/* Pollutants + Best Window Highlights Grid */}
+              {/* Pollutants + Best Window Highlights Grid with generous p-5 padding */}
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {/* PM2.5 */}
-                <div className="rounded-2xl border border-black/5 bg-[#F5F5F7] p-4.5 transition-all">
+                <div className="flex flex-col justify-between rounded-2xl border border-black/5 bg-[#F5F5F7] p-5 transition-all">
                   <div className="flex items-center justify-between text-xs text-[#6E6E73]">
                     <span className="font-semibold text-[#1D1D1F]">PM2.5</span>
                     <span>Primary Smog</span>
                   </div>
-                  <div className="mt-2 flex items-baseline gap-1">
-                    <span className="text-2xl font-extrabold tabular-nums tracking-tight text-[#1D1D1F]">
+                  <div className="my-3 flex items-baseline gap-1.5">
+                    <span className="text-3xl font-semibold tabular-nums tracking-tight text-[#1D1D1F]">
                       {aqiResult.reading.pm25 !== undefined ? Math.round(aqiResult.reading.pm25) : '—'}
                     </span>
                     <span className="text-xs text-[#6E6E73]">&mu;g/m&sup3;</span>
                   </div>
-                  <p className="mt-1 text-xs text-[#6E6E73]">
+                  <p className="text-xs text-[#6E6E73] leading-relaxed">
                     Fine inhalable particles from smoke & vehicles.
                   </p>
                 </div>
 
                 {/* PM10 */}
-                <div className="rounded-2xl border border-black/5 bg-[#F5F5F7] p-4.5 transition-all">
+                <div className="flex flex-col justify-between rounded-2xl border border-black/5 bg-[#F5F5F7] p-5 transition-all">
                   <div className="flex items-center justify-between text-xs text-[#6E6E73]">
                     <span className="font-semibold text-[#1D1D1F]">PM10</span>
                     <span>Coarse Dust</span>
                   </div>
-                  <div className="mt-2 flex items-baseline gap-1">
-                    <span className="text-2xl font-extrabold tabular-nums tracking-tight text-[#1D1D1F]">
+                  <div className="my-3 flex items-baseline gap-1.5">
+                    <span className="text-3xl font-semibold tabular-nums tracking-tight text-[#1D1D1F]">
                       {aqiResult.reading.pm10 !== undefined ? Math.round(aqiResult.reading.pm10) : '—'}
                     </span>
                     <span className="text-xs text-[#6E6E73]">&mu;g/m&sup3;</span>
                   </div>
-                  <p className="mt-1 text-xs text-[#6E6E73]">
+                  <p className="text-xs text-[#6E6E73] leading-relaxed">
                     Coarse dust, road emissions, and construction debris.
                   </p>
                 </div>
 
-                {/* Best Outdoor Window */}
-                <div className="rounded-2xl border border-emerald-200/80 bg-emerald-50/60 p-4.5 transition-all">
+                {/* Best Outdoor Window - Neutral Apple card with clean accent */}
+                <div className="flex flex-col justify-between rounded-2xl border border-black/5 bg-[#F5F5F7] p-5 transition-all">
                   <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-800">
-                    <svg className="h-4 w-4 text-emerald-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                      <circle cx="12" cy="12" r="10" />
-                      <polyline points="12 6 12 12 16 14" />
-                    </svg>
+                    <span className="h-2 w-2 rounded-full bg-emerald-600 shrink-0" aria-hidden="true" />
                     <span>Best Window Today</span>
                   </div>
-                  <div className="mt-2 text-base font-bold tracking-tight text-emerald-950">
+                  <div className="my-3 text-lg font-semibold tracking-tight text-[#1D1D1F]">
                     {aqiResult.bestWindow.windowText}
                   </div>
-                  <p className="mt-1 text-xs text-emerald-850">
+                  <p className="text-xs text-[#6E6E73] leading-relaxed">
                     Lowest-AQI stretch (~{aqiResult.bestWindow.averageAqi} AQI). Safer for errands.
                   </p>
                 </div>
 
-                {/* Peak Smog Hour */}
-                <div className="rounded-2xl border border-rose-200/80 bg-rose-50/60 p-4.5 transition-all">
+                {/* Peak Smog Hour - Neutral Apple card with clean accent */}
+                <div className="flex flex-col justify-between rounded-2xl border border-black/5 bg-[#F5F5F7] p-5 transition-all">
                   <div className="flex items-center gap-1.5 text-xs font-semibold text-rose-800">
-                    <svg className="h-4 w-4 text-rose-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                      <polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2" />
-                      <line x1="12" y1="8" x2="12" y2="12" />
-                      <line x1="12" y1="16" x2="12.01" y2="16" />
-                    </svg>
+                    <span className="h-2 w-2 rounded-full bg-rose-600 shrink-0" aria-hidden="true" />
                     <span>Peak Smog Hour</span>
                   </div>
-                  <div className="mt-2 text-base font-bold tracking-tight text-rose-950">
+                  <div className="my-3 text-lg font-semibold tracking-tight text-[#1D1D1F]">
                     Around {aqiResult.bestWindow.peakHour}
                   </div>
-                  <p className="mt-1 text-xs text-rose-850">
+                  <p className="text-xs text-[#6E6E73] leading-relaxed">
                     Highest pollution peak (~{aqiResult.bestWindow.peakAqi} AQI). Keep windows closed.
                   </p>
                 </div>

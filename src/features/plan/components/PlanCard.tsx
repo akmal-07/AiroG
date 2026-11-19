@@ -71,7 +71,7 @@ const PlanCardComponent: React.FC<PlanCardProps> = ({ item }) => {
   const displayImpactLine = impact?.line ?? item.impact;
 
   return (
-    <article className="flex flex-col justify-between rounded-2xl border border-black/5 bg-white p-5 shadow-apple transition-all hover:shadow-apple-hover hover:border-black/10">
+    <article className="flex flex-col justify-between rounded-2xl border border-black/5 bg-white p-5 sm:p-6 shadow-apple transition-all hover:shadow-apple-hover hover:border-black/10 space-y-4">
       <div>
         {/* Badges Bar: Category + Impact Level Badge */}
         <div className="flex flex-wrap items-center justify-between gap-2">
@@ -83,7 +83,7 @@ const PlanCardComponent: React.FC<PlanCardProps> = ({ item }) => {
           </span>
 
           <span
-            className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-2xs font-bold ${impactBadgeConfig.badgeClass}`}
+            className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-semibold ${impactBadgeConfig.badgeClass}`}
             role="status"
             aria-label={`Impact level: ${impactBadgeConfig.label}`}
           >
@@ -92,7 +92,7 @@ const PlanCardComponent: React.FC<PlanCardProps> = ({ item }) => {
           </span>
         </div>
 
-        <h3 className="mt-3.5 text-base font-bold tracking-tight text-[#1D1D1F] leading-snug">
+        <h3 className="mt-3.5 text-base font-semibold tracking-tight text-[#1D1D1F] leading-snug">
           {item.title}
         </h3>
 
@@ -101,15 +101,15 @@ const PlanCardComponent: React.FC<PlanCardProps> = ({ item }) => {
         </p>
       </div>
 
-      {/* Traceable Plain-Words Impact Indicator */}
-      <div className="mt-4 rounded-xl bg-[#F5F5F7] border border-black/5 p-3.5">
+      {/* Traceable Plain-Words Impact Indicator with generous p-4 padding */}
+      <div className="rounded-xl bg-[#F5F5F7] border border-black/5 p-4 space-y-2">
         <div className="flex items-start gap-1.5 text-xs text-[#1D1D1F]">
-          <span className="font-bold text-[#1D1D1F] shrink-0">Impact:</span>
+          <span className="font-semibold text-[#1D1D1F] shrink-0">Impact:</span>
           <span className="leading-normal">{displayImpactLine}</span>
         </div>
 
         {impact?.ruleTrace && (
-          <p className="mt-1.5 text-2xs font-medium text-[#6E6E73] border-t border-black/5 pt-1.5">
+          <p className="text-xs font-medium text-[#6E6E73] border-t border-black/5 pt-2 leading-relaxed">
             {impact.ruleTrace}
           </p>
         )}

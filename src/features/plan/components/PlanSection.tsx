@@ -48,7 +48,7 @@ export const PlanSectionComponent: React.FC<PlanSectionProps> = ({
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-black/5 pb-5">
         <div>
           <div className="flex items-center gap-2.5">
-            <h2 id="plan-section-heading" className="text-xl sm:text-2xl font-bold tracking-tight text-[#1D1D1F]">
+            <h2 id="plan-section-heading" className="text-xl sm:text-2xl font-semibold tracking-tight text-[#1D1D1F]">
               Today's Low-Emission Day Plan
             </h2>
             {plan && (
@@ -116,7 +116,7 @@ export const PlanSectionComponent: React.FC<PlanSectionProps> = ({
             return (
               <div key={key} className="space-y-3">
                 <div>
-                  <h3 className="text-sm font-bold tracking-tight text-[#1D1D1F]">{title}</h3>
+                  <h3 className="text-sm font-semibold tracking-tight text-[#1D1D1F]">{title}</h3>
                   <p className="text-xs text-[#6E6E73]">{subtitle}</p>
                 </div>
 
