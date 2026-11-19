@@ -27,7 +27,7 @@ Here is what makes AiroG fundamentally different from traditional weather apps:
 In Challenge 05, my project *Planovent* scored 94.47/100 (Rank #559 of 51,762). This time, the goal is Rank #1.
 
 Experience the live app and let me know your thoughts:
-🔗 **Live Demo:** https://airog.vercel.app *(Deploy URL)*  
+🔗 **Live Demo:** https://airog.vercel.app  
 💻 **Open-Source Code:** https://github.com/akmal-07/AiroG  
 
 Would love feedback from parents, developers, and anyone navigating winter smog in India! 🇮🇳

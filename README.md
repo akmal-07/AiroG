@@ -3,7 +3,7 @@
 > **GenAI Air-Quality Assistant for Indian Families Navigating Winter Smog**  
 > *PromptWars Virtual Challenge 06: Urban Air Quality Assistant*  
 > **Author:** Mohammed Akmal Kanna Mangalam (`akmal-07`)  
-> **Live Demo:** [https://airog.vercel.app](https://airog.vercel.app) *(Deploy URL placeholder)*  
+> **Live Demo:** [https://airog.vercel.app](https://airog.vercel.app)  
 > **Repository:** [https://github.com/akmal-07/AiroG](https://github.com/akmal-07/AiroG)
 
 ---
