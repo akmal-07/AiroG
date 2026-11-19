@@ -1,0 +1,285 @@
+import type { AqiReading, ForecastHour } from '../lib/types';
+import { getAqiBand } from '../lib/aqi';
+
+/**
+ * Helper to generate hourly forecast data for demo cities.
+ */
+function createHourlyForecast(
+  hours: readonly { readonly hour: string; readonly aqi: number; readonly pm25: number; readonly pm10: number }[]
+): ForecastHour[] {
+  return hours.map((h) => ({
+    time: h.hour,
+    aqi: h.aqi,
+    pm25: h.pm25,
+    pm10: h.pm10,
+  }));
+}
+
+/**
+ * Realistic curated AQI data and hourly forecasts for 10 Indian cities.
+ * Delhi reflects a severe winter smog episode (AQI ~312 Very Poor) with evening peak and afternoon low.
+ */
+export const DEMO_AQI_DATA: readonly AqiReading[] = [
+  {
+    city: 'Delhi',
+    aqi: 312,
+    pm25: 135.3,
+    pm10: 275.0,
+    category: getAqiBand(312).key,
+    updatedAt: new Date().toISOString(),
+    isDemo: true,
+    pollutants: {
+      pm25: 135.3,
+      pm10: 275.0,
+      no2: 68.4,
+      o3: 42.1,
+      co: 2.1,
+      so2: 18.5,
+    },
+    forecast: createHourlyForecast([
+      { hour: '6:00 AM', aqi: 345, pm25: 165, pm10: 310 },
+      { hour: '8:00 AM', aqi: 360, pm25: 180, pm10: 330 },
+      { hour: '10:00 AM', aqi: 320, pm25: 140, pm10: 280 },
+      { hour: '12:00 PM', aqi: 280, pm25: 110, pm10: 240 },
+      { hour: '2:00 PM', aqi: 235, pm25: 98, pm10: 210 },
+      { hour: '4:00 PM', aqi: 248, pm25: 104, pm10: 220 },
+      { hour: '6:00 PM', aqi: 315, pm25: 138, pm10: 280 },
+      { hour: '8:00 PM', aqi: 368, pm25: 190, pm10: 345 },
+      { hour: '10:00 PM', aqi: 355, pm25: 175, pm10: 325 },
+    ]),
+  },
+  {
+    city: 'Mumbai',
+    aqi: 135,
+    pm25: 48.0,
+    pm10: 115.0,
+    category: getAqiBand(135).key,
+    updatedAt: new Date().toISOString(),
+    isDemo: true,
+    pollutants: {
+      pm25: 48.0,
+      pm10: 115.0,
+      no2: 32.0,
+      o3: 35.0,
+      co: 1.1,
+      so2: 12.0,
+    },
+    forecast: createHourlyForecast([
+      { hour: '6:00 AM', aqi: 120, pm25: 40, pm10: 100 },
+      { hour: '9:00 AM', aqi: 155, pm25: 58, pm10: 130 },
+      { hour: '12:00 PM', aqi: 140, pm25: 50, pm10: 120 },
+      { hour: '3:00 PM', aqi: 115, pm25: 38, pm10: 95 },
+      { hour: '6:00 PM', aqi: 135, pm25: 48, pm10: 115 },
+      { hour: '9:00 PM', aqi: 145, pm25: 53, pm10: 125 },
+    ]),
+  },
+  {
+    city: 'Bengaluru',
+    aqi: 68,
+    pm25: 21.0,
+    pm10: 58.0,
+    category: getAqiBand(68).key,
+    updatedAt: new Date().toISOString(),
+    isDemo: true,
+    pollutants: {
+      pm25: 21.0,
+      pm10: 58.0,
+      no2: 18.0,
+      o3: 28.0,
+      co: 0.7,
+      so2: 8.0,
+    },
+    forecast: createHourlyForecast([
+      { hour: '6:00 AM', aqi: 55, pm25: 16, pm10: 45 },
+      { hour: '9:00 AM', aqi: 78, pm25: 25, pm10: 68 },
+      { hour: '12:00 PM', aqi: 68, pm25: 21, pm10: 58 },
+      { hour: '3:00 PM', aqi: 58, pm25: 18, pm10: 50 },
+      { hour: '6:00 PM', aqi: 82, pm25: 27, pm10: 72 },
+      { hour: '9:00 PM', aqi: 70, pm25: 22, pm10: 60 },
+    ]),
+  },
+  {
+    city: 'Chennai',
+    aqi: 75,
+    pm25: 23.5,
+    pm10: 65.0,
+    category: getAqiBand(75).key,
+    updatedAt: new Date().toISOString(),
+    isDemo: true,
+    pollutants: {
+      pm25: 23.5,
+      pm10: 65.0,
+      no2: 20.0,
+      o3: 31.0,
+      co: 0.8,
+      so2: 9.0,
+    },
+    forecast: createHourlyForecast([
+      { hour: '6:00 AM', aqi: 62, pm25: 19, pm10: 54 },
+      { hour: '9:00 AM', aqi: 84, pm25: 28, pm10: 74 },
+      { hour: '12:00 PM', aqi: 75, pm25: 24, pm10: 65 },
+      { hour: '3:00 PM', aqi: 65, pm25: 20, pm10: 56 },
+      { hour: '6:00 PM', aqi: 88, pm25: 30, pm10: 78 },
+      { hour: '9:00 PM', aqi: 72, pm25: 23, pm10: 62 },
+    ]),
+  },
+  {
+    city: 'Kolkata',
+    aqi: 245,
+    pm25: 98.0,
+    pm10: 190.0,
+    category: getAqiBand(245).key,
+    updatedAt: new Date().toISOString(),
+    isDemo: true,
+    pollutants: {
+      pm25: 98.0,
+      pm10: 190.0,
+      no2: 52.0,
+      o3: 38.0,
+      co: 1.6,
+      so2: 15.0,
+    },
+    forecast: createHourlyForecast([
+      { hour: '6:00 AM', aqi: 260, pm25: 108, pm10: 210 },
+      { hour: '9:00 AM', aqi: 275, pm25: 114, pm10: 225 },
+      { hour: '12:00 PM', aqi: 230, pm25: 90, pm10: 175 },
+      { hour: '3:00 PM', aqi: 195, pm25: 75, pm10: 150 },
+      { hour: '6:00 PM', aqi: 255, pm25: 102, pm10: 200 },
+      { hour: '9:00 PM', aqi: 280, pm25: 116, pm10: 230 },
+    ]),
+  },
+  {
+    city: 'Hyderabad',
+    aqi: 142,
+    pm25: 52.0,
+    pm10: 122.0,
+    category: getAqiBand(142).key,
+    updatedAt: new Date().toISOString(),
+    isDemo: true,
+    pollutants: {
+      pm25: 52.0,
+      pm10: 122.0,
+      no2: 34.0,
+      o3: 36.0,
+      co: 1.2,
+      so2: 13.0,
+    },
+    forecast: createHourlyForecast([
+      { hour: '6:00 AM', aqi: 125, pm25: 42, pm10: 105 },
+      { hour: '9:00 AM', aqi: 160, pm25: 60, pm10: 135 },
+      { hour: '12:00 PM', aqi: 145, pm25: 53, pm10: 124 },
+      { hour: '3:00 PM', aqi: 120, pm25: 40, pm10: 100 },
+      { hour: '6:00 PM', aqi: 155, pm25: 58, pm10: 132 },
+      { hour: '9:00 PM', aqi: 140, pm25: 50, pm10: 120 },
+    ]),
+  },
+  {
+    city: 'Pune',
+    aqi: 118,
+    pm25: 42.0,
+    pm10: 95.0,
+    category: getAqiBand(118).key,
+    updatedAt: new Date().toISOString(),
+    isDemo: true,
+    pollutants: {
+      pm25: 42.0,
+      pm10: 95.0,
+      no2: 26.0,
+      o3: 32.0,
+      co: 1.0,
+      so2: 10.0,
+    },
+    forecast: createHourlyForecast([
+      { hour: '6:00 AM', aqi: 105, pm25: 35, pm10: 85 },
+      { hour: '9:00 AM', aqi: 135, pm25: 48, pm10: 115 },
+      { hour: '12:00 PM', aqi: 118, pm25: 42, pm10: 95 },
+      { hour: '3:00 PM', aqi: 98, pm25: 32, pm10: 80 },
+      { hour: '6:00 PM', aqi: 128, pm25: 45, pm10: 105 },
+      { hour: '9:00 PM', aqi: 122, pm25: 43, pm10: 100 },
+    ]),
+  },
+  {
+    city: 'Jaipur',
+    aqi: 228,
+    pm25: 92.0,
+    pm10: 180.0,
+    category: getAqiBand(228).key,
+    updatedAt: new Date().toISOString(),
+    isDemo: true,
+    pollutants: {
+      pm25: 92.0,
+      pm10: 180.0,
+      no2: 44.0,
+      o3: 39.0,
+      co: 1.4,
+      so2: 14.0,
+    },
+    forecast: createHourlyForecast([
+      { hour: '6:00 AM', aqi: 240, pm25: 98, pm10: 195 },
+      { hour: '9:00 AM', aqi: 255, pm25: 104, pm10: 205 },
+      { hour: '12:00 PM', aqi: 220, pm25: 88, pm10: 170 },
+      { hour: '3:00 PM', aqi: 185, pm25: 70, pm10: 145 },
+      { hour: '6:00 PM', aqi: 245, pm25: 100, pm10: 195 },
+      { hour: '9:00 PM', aqi: 260, pm25: 106, pm10: 210 },
+    ]),
+  },
+  {
+    city: 'Tirupati',
+    aqi: 45,
+    pm25: 13.5,
+    pm10: 38.0,
+    category: getAqiBand(45).key,
+    updatedAt: new Date().toISOString(),
+    isDemo: true,
+    pollutants: {
+      pm25: 13.5,
+      pm10: 38.0,
+      no2: 12.0,
+      o3: 24.0,
+      co: 0.5,
+      so2: 6.0,
+    },
+    forecast: createHourlyForecast([
+      { hour: '6:00 AM', aqi: 38, pm25: 11, pm10: 30 },
+      { hour: '9:00 AM', aqi: 52, pm25: 16, pm10: 45 },
+      { hour: '12:00 PM', aqi: 45, pm25: 13, pm10: 38 },
+      { hour: '3:00 PM', aqi: 40, pm25: 12, pm10: 34 },
+      { hour: '6:00 PM', aqi: 56, pm25: 18, pm10: 48 },
+      { hour: '9:00 PM', aqi: 44, pm25: 13, pm10: 36 },
+    ]),
+  },
+  {
+    city: 'Kakinada',
+    aqi: 54,
+    pm25: 16.0,
+    pm10: 48.0,
+    category: getAqiBand(54).key,
+    updatedAt: new Date().toISOString(),
+    isDemo: true,
+    pollutants: {
+      pm25: 16.0,
+      pm10: 48.0,
+      no2: 15.0,
+      o3: 26.0,
+      co: 0.6,
+      so2: 7.0,
+    },
+    forecast: createHourlyForecast([
+      { hour: '6:00 AM', aqi: 46, pm25: 13, pm10: 40 },
+      { hour: '9:00 AM', aqi: 62, pm25: 19, pm10: 54 },
+      { hour: '12:00 PM', aqi: 54, pm25: 16, pm10: 48 },
+      { hour: '3:00 PM', aqi: 48, pm25: 14, pm10: 42 },
+      { hour: '6:00 PM', aqi: 65, pm25: 20, pm10: 58 },
+      { hour: '9:00 PM', aqi: 50, pm25: 15, pm10: 44 },
+    ]),
+  },
+];
+
+/**
+ * Looks up demo AQI reading for a city (case-insensitive).
+ */
+export function getDemoAqi(city: string): AqiReading | undefined {
+  if (!city) return undefined;
+  const normalized = city.trim().toLowerCase();
+  return DEMO_AQI_DATA.find((entry) => entry.city.toLowerCase() === normalized);
+}
