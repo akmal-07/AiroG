@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+  darkMode: 'class',
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
@@ -17,17 +18,16 @@ export default {
         ],
       },
       colors: {
-        // Apple-inspired minimalist palette
-        apple: {
-          canvas: "#F5F5F7",
-          card: "#FFFFFF",
-          ink: "#1D1D1F",
-          secondary: "#6E6E73",
-          tertiary: "#86868B",
-          blue: "#0071E3",
-          blueHover: "#0077ED",
-          border: "rgba(0, 0, 0, 0.06)",
-        },
+        // Apple Semantic Design Tokens mapped to CSS variables
+        canvas: "var(--bg-canvas)",
+        elevated: "var(--bg-elevated)",
+        nested: "var(--bg-nested)",
+        hairline: "var(--border-hairline)",
+        "label-primary": "var(--label-primary)",
+        "label-secondary": "var(--label-secondary)",
+        "accent-blue": "var(--accent-blue)",
+        glass: "var(--glass-bg)",
+
         // CPCB AQI Scale color palette mapped to accessible tokens
         cpcb: {
           good: "#00b050",
@@ -41,6 +41,9 @@ export default {
       boxShadow: {
         apple: "0 2px 12px rgba(0, 0, 0, 0.04)",
         "apple-hover": "0 6px 20px rgba(0, 0, 0, 0.07)",
+      },
+      backdropSaturate: {
+        180: "1.8",
       },
     },
   },

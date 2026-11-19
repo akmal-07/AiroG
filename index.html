@@ -7,10 +7,29 @@
       name="description"
       content="AiroG: GenAI air-quality assistant helping Indian families make safer daily decisions during winter smog."
     />
-    <meta name="theme-color" content="#0d9488" />
+    <meta name="theme-color" content="#F5F5F7" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
+
+    <!-- Zero-flash Apple-grade Theme Bootstrap -->
+    <script>
+      (function () {
+        try {
+          var theme = localStorage.getItem('airog_theme') || 'auto';
+          var isDark =
+            theme === 'dark' ||
+            (theme === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          if (isDark) {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+          }
+        } catch (e) {}
+      })();
+    </script>
+
     <title>AiroG — Clear air, made simple.</title>
   </head>
-  <body class="min-h-screen bg-slate-50 text-slate-900 antialiased selection:bg-teal-100 selection:text-teal-900">
+  <body class="min-h-screen antialiased selection:bg-[#0071E3]/20 selection:text-[#0071E3]">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

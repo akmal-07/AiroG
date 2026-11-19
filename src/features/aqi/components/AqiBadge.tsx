@@ -10,6 +10,15 @@ export interface AqiBadgeProps {
   readonly className?: string;
 }
 
+export const DARK_BAND_CLASSES: Record<CpcbBandKey, string> = {
+  Good: 'dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-700/50',
+  Satisfactory: 'dark:bg-lime-950/40 dark:text-lime-300 dark:border-lime-700/50',
+  Moderate: 'dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-700/50',
+  Poor: 'dark:bg-orange-950/40 dark:text-orange-300 dark:border-orange-700/50',
+  'Very Poor': 'dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-700/50',
+  Severe: 'dark:bg-red-950/70 dark:text-red-200 dark:border-red-700/60',
+};
+
 const AqiBadgeComponent: React.FC<AqiBadgeProps> = ({
   aqi,
   bandKey,
@@ -46,11 +55,13 @@ const AqiBadgeComponent: React.FC<AqiBadgeProps> = ({
     ? `AQI ${aqi}, ${band.label} category (CPCB scale ${band.rangeText})`
     : `${band.label} category (CPCB scale ${band.rangeText})`;
 
+  const darkClass = DARK_BAND_CLASSES[band.key] ?? '';
+
   return (
     <span
       role="status"
       aria-label={accessibleLabel}
-      className={`inline-flex items-center rounded-full border font-semibold tracking-tight shadow-2xs ${band.badgeBg} ${band.badgeText} ${band.badgeBorder} ${sizeClasses} ${className}`}
+      className={`inline-flex items-center rounded-full border font-semibold tracking-tight shadow-xs ${band.badgeBg} ${band.badgeText} ${band.badgeBorder} ${darkClass} ${sizeClasses} ${className}`}
     >
       <span
         className={`rounded-full shrink-0 ${band.dotColor} ${dotSizes}`}

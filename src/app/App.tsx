@@ -26,14 +26,14 @@ const PlanSectionSkeleton: React.FC = () => (
   <div
     role="status"
     aria-label="Loading today's action plan section"
-    className="rounded-3xl border border-black/5 bg-white p-6 sm:p-8 shadow-apple animate-pulse space-y-4"
+    className="rounded-3xl border border-hairline bg-elevated p-6 sm:p-8 shadow-apple dark:shadow-none animate-pulse space-y-4"
   >
-    <div className="h-6 w-56 rounded-md bg-[#E5E5EA]" />
-    <div className="h-4 w-72 rounded-md bg-[#F5F5F7]" />
+    <div className="h-6 w-56 rounded-md bg-nested" />
+    <div className="h-4 w-72 rounded-md bg-nested/80" />
     <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-      <div className="h-28 rounded-2xl bg-[#F5F5F7]" />
-      <div className="h-28 rounded-2xl bg-[#F5F5F7]" />
-      <div className="h-28 rounded-2xl bg-[#F5F5F7]" />
+      <div className="h-28 rounded-2xl bg-nested" />
+      <div className="h-28 rounded-2xl bg-nested" />
+      <div className="h-28 rounded-2xl bg-nested" />
     </div>
   </div>
 );
@@ -188,13 +188,13 @@ export const App: React.FC = () => {
   }, [aqiResult, plan, household]);
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#F5F5F7] text-[#1D1D1F]">
+    <div className="flex min-h-screen flex-col bg-canvas text-label-primary transition-colors duration-200">
       <Header />
 
       <main className="flex-1 py-8 sm:py-10" role="main">
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 space-y-8">
           {/* City Selection Bar */}
-          <section aria-labelledby="city-search-heading" className="rounded-3xl border border-black/5 bg-white p-5 sm:p-7 shadow-apple space-y-4">
+          <section aria-labelledby="city-search-heading" className="rounded-3xl border border-hairline bg-elevated p-5 sm:p-7 shadow-apple dark:shadow-none space-y-4 transition-colors">
             <h2 id="city-search-heading" className="sr-only">
               City Selection
             </h2>
@@ -204,7 +204,7 @@ export const App: React.FC = () => {
                 <label htmlFor="city-input" className="sr-only">
                   Enter city name
                 </label>
-                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-[#86868B]" aria-hidden="true">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-label-secondary" aria-hidden="true">
                   <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="11" cy="11" r="8" />
                     <path d="m21 21-4.3-4.3" />
@@ -217,14 +217,14 @@ export const App: React.FC = () => {
                   value={cityInput}
                   onChange={(e) => setCityInput(e.target.value)}
                   placeholder="Enter any Indian city (e.g., Delhi, Mumbai, Tirupati)..."
-                  className="w-full rounded-2xl border border-black/10 bg-[#F5F5F7] py-3 pl-11 pr-4 text-sm font-medium text-[#1D1D1F] placeholder:text-[#86868B] transition focus:border-[#0071E3] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#0071E3]/20"
+                  className="w-full rounded-2xl border border-hairline bg-nested py-3 pl-11 pr-4 text-sm font-medium text-label-primary placeholder:text-label-secondary transition focus:border-accent-blue focus:bg-elevated focus:outline-none focus:ring-2 focus:ring-accent-blue/20"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={loadingAqi}
-                className="inline-flex items-center justify-center rounded-2xl bg-[#0071E3] hover:bg-[#0077ED] px-6 py-3 text-sm font-semibold text-white shadow-xs transition active:scale-98 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0071E3] disabled:opacity-50"
+                className="inline-flex items-center justify-center rounded-2xl bg-accent-blue hover:opacity-90 px-6 py-3 text-sm font-semibold text-white shadow-xs transition active:scale-98 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-blue disabled:opacity-50"
               >
                 {loadingAqi ? (
                   <span className="flex items-center gap-2">
@@ -240,8 +240,8 @@ export const App: React.FC = () => {
             </form>
 
             {/* Quick-pick Indian cities */}
-            <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-black/5">
-              <span className="text-xs font-semibold text-[#6E6E73]">Quick select:</span>
+            <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-hairline">
+              <span className="text-xs font-semibold text-label-secondary">Quick select:</span>
               <div className="flex flex-wrap gap-2" role="group" aria-label="Quick select cities">
                 {POPULAR_CITIES.map((c) => {
                   const isSelected = activeCity.toLowerCase() === c.toLowerCase();
@@ -251,10 +251,10 @@ export const App: React.FC = () => {
                       type="button"
                       aria-pressed={isSelected}
                       onClick={() => handleCitySelect(c)}
-                      className={`rounded-full px-3.5 py-1 text-xs font-semibold transition active:scale-95 focus-visible:outline-2 focus-visible:outline-[#0071E3] ${
+                      className={`rounded-full px-3.5 py-1 text-xs font-semibold transition active:scale-95 focus-visible:outline-2 focus-visible:outline-accent-blue ${
                         isSelected
-                          ? 'bg-[#1D1D1F] text-white shadow-xs'
-                          : 'bg-[#F5F5F7] text-[#1D1D1F] hover:bg-[#E8E8ED] border border-black/5'
+                          ? 'bg-label-primary text-canvas shadow-xs'
+                          : 'bg-nested text-label-primary hover:opacity-80 border border-hairline'
                       }`}
                     >
                       {c}
@@ -270,14 +270,14 @@ export const App: React.FC = () => {
             <section
               role="status"
               aria-live="polite"
-              className="flex flex-col items-center justify-center rounded-3xl border border-black/5 bg-white p-12 text-center shadow-apple"
+              className="flex flex-col items-center justify-center rounded-3xl border border-hairline bg-elevated p-12 text-center shadow-apple dark:shadow-none transition-colors"
             >
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-[#0071E3]">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-accent-blue/10 text-accent-blue">
                 <svg className="h-6 w-6 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                   <circle cx="12" cy="12" r="10" strokeDasharray="32" strokeLinecap="round" />
                 </svg>
               </div>
-              <p className="mt-4 text-sm font-medium text-[#1D1D1F]">
+              <p className="mt-4 text-sm font-medium text-label-primary">
                 Fetching CPCB air quality and hourly forecast for {cityInput}...
               </p>
               <span className="sr-only">Loading air quality data</span>
@@ -288,11 +288,11 @@ export const App: React.FC = () => {
           {!loadingAqi && aqiError && (
             <section
               role="alert"
-              className="rounded-3xl border border-rose-200 bg-rose-50/80 p-6 shadow-apple"
+              className="rounded-3xl border border-rose-200 bg-rose-50/80 dark:bg-rose-950/30 dark:border-rose-900/50 p-6 shadow-apple dark:shadow-none transition-colors"
             >
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-start gap-3.5">
-                  <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-rose-100 text-rose-700" aria-hidden="true">
+                  <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-rose-100 dark:bg-rose-900/50 text-rose-700 dark:text-rose-300" aria-hidden="true">
                     <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="12" cy="12" r="10" />
                       <line x1="12" y1="8" x2="12" y2="12" />
@@ -300,14 +300,14 @@ export const App: React.FC = () => {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-rose-950">Unable to retrieve air quality data</h3>
-                    <p className="mt-1 text-sm text-rose-800">{aqiError}</p>
+                    <h3 className="text-sm font-bold text-rose-950 dark:text-rose-200">Unable to retrieve air quality data</h3>
+                    <p className="mt-1 text-sm text-rose-800 dark:text-rose-300">{aqiError}</p>
                   </div>
                 </div>
                 <button
                   type="button"
                   onClick={handleRetryAqi}
-                  className="inline-flex items-center justify-center rounded-full bg-white px-4 py-2 text-xs font-semibold text-rose-900 shadow-sm ring-1 ring-rose-300 hover:bg-rose-100 transition active:scale-95 focus-visible:outline-[#0071E3]"
+                  className="inline-flex items-center justify-center rounded-full bg-elevated px-4 py-2 text-xs font-semibold text-rose-900 dark:text-rose-200 shadow-sm ring-1 ring-rose-300 dark:ring-rose-800 hover:bg-nested transition active:scale-95 focus-visible:outline-accent-blue"
                 >
                   <svg className="mr-1.5 h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
@@ -325,18 +325,18 @@ export const App: React.FC = () => {
           {!loadingAqi && !aqiError && aqiResult && (
             <section
               aria-labelledby="live-aqi-heading"
-              className="rounded-3xl border border-black/5 bg-white p-6 sm:p-8 shadow-apple space-y-6"
+              className="rounded-3xl border border-hairline bg-elevated p-6 sm:p-8 shadow-apple dark:shadow-none space-y-6 transition-colors"
             >
               {/* Card Header: City + Updated + Demo Data Badge */}
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-black/5 pb-5">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-hairline pb-5">
                 <div>
                   <div className="flex items-center gap-2.5">
-                    <h2 id="live-aqi-heading" className="text-2xl sm:text-3xl font-semibold tracking-tight text-[#1D1D1F]">
+                    <h2 id="live-aqi-heading" className="text-2xl sm:text-3xl font-semibold tracking-tight text-label-primary">
                       {aqiResult.reading.city}
                     </h2>
                     {aqiResult.isDemo && (
                       <span
-                        className="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-2.5 py-0.5 text-xs font-semibold text-amber-800"
+                        className="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/50 px-2.5 py-0.5 text-xs font-semibold text-amber-800"
                         title="Using curated Indian demo dataset. Configure OPENWEATHER_API_KEY for live readings."
                       >
                         <span className="h-1.5 w-1.5 rounded-full bg-amber-500" aria-hidden="true" />
@@ -344,7 +344,7 @@ export const App: React.FC = () => {
                       </span>
                     )}
                   </div>
-                  <p className="text-xs sm:text-sm text-[#6E6E73] mt-1">
+                  <p className="text-xs sm:text-sm text-label-secondary mt-1">
                     Indian CPCB Scale &bull; Updated {new Date(aqiResult.reading.updatedAt).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true })}
                   </p>
                 </div>
@@ -357,63 +357,63 @@ export const App: React.FC = () => {
               {/* Pollutants + Best Window Highlights Grid with generous p-5 padding */}
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {/* PM2.5 */}
-                <div className="flex flex-col justify-between rounded-2xl border border-black/5 bg-[#F5F5F7] p-5 transition-all">
-                  <div className="flex items-center justify-between text-xs text-[#6E6E73]">
-                    <span className="font-semibold text-[#1D1D1F]">PM2.5</span>
+                <div className="flex flex-col justify-between rounded-2xl border border-hairline bg-nested p-5 transition-all">
+                  <div className="flex items-center justify-between text-xs text-label-secondary">
+                    <span className="font-semibold text-label-primary">PM2.5</span>
                     <span>Primary Smog</span>
                   </div>
                   <div className="my-3 flex items-baseline gap-1.5">
-                    <span className="text-3xl font-semibold tabular-nums tracking-tight text-[#1D1D1F]">
+                    <span className="text-3xl font-semibold tabular-nums tracking-tight text-label-primary">
                       {aqiResult.reading.pm25 !== undefined ? Math.round(aqiResult.reading.pm25) : '—'}
                     </span>
-                    <span className="text-xs text-[#6E6E73]">&mu;g/m&sup3;</span>
+                    <span className="text-xs text-label-secondary">&mu;g/m&sup3;</span>
                   </div>
-                  <p className="text-xs text-[#6E6E73] leading-relaxed">
+                  <p className="text-xs text-label-secondary leading-relaxed">
                     Fine inhalable particles from smoke & vehicles.
                   </p>
                 </div>
 
                 {/* PM10 */}
-                <div className="flex flex-col justify-between rounded-2xl border border-black/5 bg-[#F5F5F7] p-5 transition-all">
-                  <div className="flex items-center justify-between text-xs text-[#6E6E73]">
-                    <span className="font-semibold text-[#1D1D1F]">PM10</span>
+                <div className="flex flex-col justify-between rounded-2xl border border-hairline bg-nested p-5 transition-all">
+                  <div className="flex items-center justify-between text-xs text-label-secondary">
+                    <span className="font-semibold text-label-primary">PM10</span>
                     <span>Coarse Dust</span>
                   </div>
                   <div className="my-3 flex items-baseline gap-1.5">
-                    <span className="text-3xl font-semibold tabular-nums tracking-tight text-[#1D1D1F]">
+                    <span className="text-3xl font-semibold tabular-nums tracking-tight text-label-primary">
                       {aqiResult.reading.pm10 !== undefined ? Math.round(aqiResult.reading.pm10) : '—'}
                     </span>
-                    <span className="text-xs text-[#6E6E73]">&mu;g/m&sup3;</span>
+                    <span className="text-xs text-label-secondary">&mu;g/m&sup3;</span>
                   </div>
-                  <p className="text-xs text-[#6E6E73] leading-relaxed">
+                  <p className="text-xs text-label-secondary leading-relaxed">
                     Coarse dust, road emissions, and construction debris.
                   </p>
                 </div>
 
                 {/* Best Outdoor Window - Neutral Apple card with clean accent */}
-                <div className="flex flex-col justify-between rounded-2xl border border-black/5 bg-[#F5F5F7] p-5 transition-all">
-                  <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-800">
+                <div className="flex flex-col justify-between rounded-2xl border border-hairline bg-nested p-5 transition-all">
+                  <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-800 dark:text-emerald-300">
                     <span className="h-2 w-2 rounded-full bg-emerald-600 shrink-0" aria-hidden="true" />
                     <span>Best Window Today</span>
                   </div>
-                  <div className="my-3 text-lg font-semibold tracking-tight text-[#1D1D1F]">
+                  <div className="my-3 text-lg font-semibold tracking-tight text-label-primary">
                     {aqiResult.bestWindow.windowText}
                   </div>
-                  <p className="text-xs text-[#6E6E73] leading-relaxed">
+                  <p className="text-xs text-label-secondary leading-relaxed">
                     Lowest-AQI stretch (~{aqiResult.bestWindow.averageAqi} AQI). Safer for errands.
                   </p>
                 </div>
 
                 {/* Peak Smog Hour - Neutral Apple card with clean accent */}
-                <div className="flex flex-col justify-between rounded-2xl border border-black/5 bg-[#F5F5F7] p-5 transition-all">
-                  <div className="flex items-center gap-1.5 text-xs font-semibold text-rose-800">
+                <div className="flex flex-col justify-between rounded-2xl border border-hairline bg-nested p-5 transition-all">
+                  <div className="flex items-center gap-1.5 text-xs font-semibold text-rose-800 dark:text-rose-300">
                     <span className="h-2 w-2 rounded-full bg-rose-600 shrink-0" aria-hidden="true" />
                     <span>Peak Smog Hour</span>
                   </div>
-                  <div className="my-3 text-lg font-semibold tracking-tight text-[#1D1D1F]">
+                  <div className="my-3 text-lg font-semibold tracking-tight text-label-primary">
                     Around {aqiResult.bestWindow.peakHour}
                   </div>
-                  <p className="text-xs text-[#6E6E73] leading-relaxed">
+                  <p className="text-xs text-label-secondary leading-relaxed">
                     Highest pollution peak (~{aqiResult.bestWindow.peakAqi} AQI). Keep windows closed.
                   </p>
                 </div>

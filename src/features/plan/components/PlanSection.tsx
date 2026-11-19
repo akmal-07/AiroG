@@ -43,34 +43,34 @@ export const PlanSectionComponent: React.FC<PlanSectionProps> = ({
   return (
     <section
       aria-labelledby="plan-section-heading"
-      className="rounded-3xl border border-black/5 bg-white p-6 sm:p-8 shadow-apple space-y-6"
+      className="rounded-3xl border border-hairline bg-elevated p-6 sm:p-8 shadow-apple dark:shadow-none space-y-6 transition-colors"
     >
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-black/5 pb-5">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-hairline pb-5">
         <div>
           <div className="flex items-center gap-2.5">
-            <h2 id="plan-section-heading" className="text-xl sm:text-2xl font-semibold tracking-tight text-[#1D1D1F]">
+            <h2 id="plan-section-heading" className="text-xl sm:text-2xl font-semibold tracking-tight text-label-primary">
               Today's Low-Emission Day Plan
             </h2>
             {plan && (
               <span
                 className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                   plan.planType === 'standard plan'
-                    ? 'bg-[#F5F5F7] text-[#1D1D1F] border border-black/10'
-                    : 'bg-blue-50 text-[#0071E3] border border-blue-200'
+                    ? 'bg-nested text-label-primary border border-hairline'
+                    : 'bg-blue-50 text-accent-blue border border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800/50'
                 }`}
               >
                 {plan.planType === 'standard plan' ? 'standard plan' : 'AI-tailored'}
               </span>
             )}
           </div>
-          <p className="text-xs sm:text-sm text-[#6E6E73] mt-1">
+          <p className="text-xs sm:text-sm text-label-secondary mt-1">
             Actions tailored to {activeCity}'s smog conditions and your household profile.
           </p>
         </div>
 
         {loadingPlan && (
-          <div className="flex items-center gap-2 text-xs font-medium text-[#0071E3]" role="status">
-            <svg className="h-4 w-4 animate-spin text-[#0071E3]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+          <div className="flex items-center gap-2 text-xs font-medium text-accent-blue" role="status">
+            <svg className="h-4 w-4 animate-spin text-accent-blue" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
               <circle cx="12" cy="12" r="10" strokeDasharray="32" strokeLinecap="round" />
             </svg>
             <span>Drafting tailored plan...</span>
@@ -80,13 +80,13 @@ export const PlanSectionComponent: React.FC<PlanSectionProps> = ({
 
       {/* Plan Error State */}
       {planError && (
-        <div role="alert" className="rounded-2xl border border-rose-200 bg-rose-50/70 p-4">
+        <div role="alert" className="rounded-2xl border border-rose-200 bg-rose-50/70 dark:bg-rose-950/30 dark:border-rose-900/50 p-4">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-medium text-rose-800">{planError}</p>
+            <p className="text-xs font-medium text-rose-800 dark:text-rose-300">{planError}</p>
             <button
               type="button"
               onClick={onRetryPlan}
-              className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-rose-800 ring-1 ring-rose-300 hover:bg-rose-100 transition focus-visible:outline-[#0071E3]"
+              className="rounded-full bg-elevated px-3 py-1 text-xs font-semibold text-rose-800 dark:text-rose-300 ring-1 ring-rose-300 dark:ring-rose-800 hover:bg-nested transition focus-visible:outline-accent-blue"
             >
               Retry Plan
             </button>
@@ -116,8 +116,8 @@ export const PlanSectionComponent: React.FC<PlanSectionProps> = ({
             return (
               <div key={key} className="space-y-3">
                 <div>
-                  <h3 className="text-sm font-semibold tracking-tight text-[#1D1D1F]">{title}</h3>
-                  <p className="text-xs text-[#6E6E73]">{subtitle}</p>
+                  <h3 className="text-sm font-semibold tracking-tight text-label-primary">{title}</h3>
+                  <p className="text-xs text-label-secondary">{subtitle}</p>
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -134,7 +134,7 @@ export const PlanSectionComponent: React.FC<PlanSectionProps> = ({
       {/* Empty State before AQI loads */}
       {!plan && !loadingPlan && !planError && (
         <div className="py-8 text-center">
-          <p className="text-sm text-[#6E6E73]">
+          <p className="text-sm text-label-secondary">
             Select a city to generate today's personalized low-emission action plan.
           </p>
         </div>

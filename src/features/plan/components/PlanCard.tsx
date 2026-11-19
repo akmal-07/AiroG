@@ -9,7 +9,7 @@ const PlanCardComponent: React.FC<PlanCardProps> = ({ item }) => {
   const categoryConfig = {
     routines: {
       label: 'Daily Routine',
-      badgeClass: 'bg-blue-50 text-blue-900 border-blue-200',
+      badgeClass: 'bg-blue-50 text-blue-900 border-blue-200 dark:bg-blue-950/40 dark:text-blue-200 dark:border-blue-800/50',
       icon: (
         <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <circle cx="12" cy="12" r="10" />
@@ -19,7 +19,7 @@ const PlanCardComponent: React.FC<PlanCardProps> = ({ item }) => {
     },
     'indoor hacks': {
       label: 'Indoor Protection',
-      badgeClass: 'bg-purple-50 text-purple-900 border-purple-200',
+      badgeClass: 'bg-purple-50 text-purple-900 border-purple-200 dark:bg-purple-950/40 dark:text-purple-200 dark:border-purple-800/50',
       icon: (
         <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
@@ -29,7 +29,7 @@ const PlanCardComponent: React.FC<PlanCardProps> = ({ item }) => {
     },
     'greener alternatives': {
       label: 'Greener Choice',
-      badgeClass: 'bg-emerald-50 text-emerald-900 border-emerald-200',
+      badgeClass: 'bg-emerald-50 text-emerald-900 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-200 dark:border-emerald-800/50',
       icon: (
         <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z" />
@@ -39,7 +39,7 @@ const PlanCardComponent: React.FC<PlanCardProps> = ({ item }) => {
     },
   }[item.category] ?? {
     label: item.category,
-    badgeClass: 'bg-[#F5F5F7] text-[#1D1D1F] border-black/10',
+    badgeClass: 'bg-nested text-label-primary border-hairline',
     icon: null,
   };
 
@@ -48,22 +48,22 @@ const PlanCardComponent: React.FC<PlanCardProps> = ({ item }) => {
   const impactBadgeConfig = {
     High: {
       label: 'High Impact',
-      badgeClass: 'bg-emerald-50 text-emerald-950 border-emerald-300',
+      badgeClass: 'bg-emerald-50 text-emerald-950 border-emerald-300 dark:bg-emerald-950/40 dark:text-emerald-200 dark:border-emerald-700/50',
       dotClass: 'bg-emerald-600',
     },
     Medium: {
       label: 'Medium Impact',
-      badgeClass: 'bg-blue-50 text-blue-950 border-blue-300',
-      dotClass: 'bg-[#0071E3]',
+      badgeClass: 'bg-blue-50 text-blue-950 border-blue-300 dark:bg-blue-950/40 dark:text-blue-200 dark:border-blue-700/50',
+      dotClass: 'bg-accent-blue',
     },
     Low: {
       label: 'Low Impact',
-      badgeClass: 'bg-[#F5F5F7] text-[#1D1D1F] border-black/15',
-      dotClass: 'bg-[#6E6E73]',
+      badgeClass: 'bg-nested text-label-primary border-hairline',
+      dotClass: 'bg-label-secondary',
     },
     Comfort: {
       label: 'Comfort',
-      badgeClass: 'bg-amber-50 text-amber-950 border-amber-300',
+      badgeClass: 'bg-amber-50 text-amber-950 border-amber-300 dark:bg-amber-950/40 dark:text-amber-200 dark:border-amber-700/50',
       dotClass: 'bg-amber-600',
     },
   }[impact?.level ?? 'Medium'];
@@ -71,7 +71,7 @@ const PlanCardComponent: React.FC<PlanCardProps> = ({ item }) => {
   const displayImpactLine = impact?.line ?? item.impact;
 
   return (
-    <article className="flex flex-col justify-between rounded-2xl border border-black/5 bg-white p-5 sm:p-6 shadow-apple transition-all hover:shadow-apple-hover hover:border-black/10 space-y-4">
+    <article className="flex flex-col justify-between rounded-2xl border border-hairline bg-elevated p-5 sm:p-6 shadow-apple dark:shadow-none transition-all hover:shadow-apple-hover hover:border-hairline/80 space-y-4">
       <div>
         {/* Badges Bar: Category + Impact Level Badge */}
         <div className="flex flex-wrap items-center justify-between gap-2">
@@ -92,24 +92,24 @@ const PlanCardComponent: React.FC<PlanCardProps> = ({ item }) => {
           </span>
         </div>
 
-        <h3 className="mt-3.5 text-base font-semibold tracking-tight text-[#1D1D1F] leading-snug">
+        <h3 className="mt-3.5 text-base font-semibold tracking-tight text-label-primary leading-snug">
           {item.title}
         </h3>
 
-        <p className="mt-2 text-sm leading-relaxed text-[#6E6E73]">
+        <p className="mt-2 text-sm leading-relaxed text-label-secondary">
           {item.detail}
         </p>
       </div>
 
       {/* Traceable Plain-Words Impact Indicator with generous p-4 padding */}
-      <div className="rounded-xl bg-[#F5F5F7] border border-black/5 p-4 space-y-2">
-        <div className="flex items-start gap-1.5 text-xs text-[#1D1D1F]">
-          <span className="font-semibold text-[#1D1D1F] shrink-0">Impact:</span>
+      <div className="rounded-xl bg-nested border border-hairline p-4 space-y-2">
+        <div className="flex items-start gap-1.5 text-xs text-label-primary">
+          <span className="font-semibold text-label-primary shrink-0">Impact:</span>
           <span className="leading-normal">{displayImpactLine}</span>
         </div>
 
         {impact?.ruleTrace && (
-          <p className="text-xs font-medium text-[#6E6E73] border-t border-black/5 pt-2 leading-relaxed">
+          <p className="text-xs font-medium text-label-secondary border-t border-hairline pt-2 leading-relaxed">
             {impact.ruleTrace}
           </p>
         )}
