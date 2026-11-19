@@ -1,14 +1,20 @@
 import React, { useEffect, useState, useCallback, useMemo, Suspense } from 'react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
-import { AqiLegend, AqiBadge, fetchAqiData } from '@/features/aqi';
+import { AqiBadge } from '@/features/aqi/components/AqiBadge';
+import { fetchAqiData } from '@/features/aqi/api/fetchAqi';
+import { CitySearchAutocomplete } from '@/features/aqi/components/CitySearchAutocomplete';
 import { HouseholdForm, initStorage, loadHousehold } from '@/features/household';
-import { computeItemImpact, generateDaySummary } from '@/features/plan/utils/impact';
 import type { AqiFetchResult, DayPlan, Household, PlanItem } from '@/types';
 
 // Code-split below-the-fold PlanSection for optimal initial bundle efficiency
 const PlanSection = React.lazy(() =>
   import('@/features/plan/components/PlanSection').then((m) => ({ default: m.PlanSection }))
+);
+
+// Code-split below-the-fold AqiLegend to maintain strict <= 190 kB initial bundle budget
+const AqiLegend = React.lazy(() =>
+  import('@/features/aqi/components/AqiLegend').then((m) => ({ default: m.AqiLegend }))
 );
 
 const POPULAR_CITIES = [
@@ -26,16 +32,17 @@ const PlanSectionSkeleton: React.FC = () => (
   <div
     role="status"
     aria-label="Loading today's action plan section"
-    className="rounded-3xl border border-hairline bg-elevated p-6 sm:p-8 shadow-apple dark:shadow-none animate-pulse space-y-4"
-  >
-    <div className="h-6 w-56 rounded-md bg-nested" />
-    <div className="h-4 w-72 rounded-md bg-nested/80" />
-    <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-      <div className="h-28 rounded-2xl bg-nested" />
-      <div className="h-28 rounded-2xl bg-nested" />
-      <div className="h-28 rounded-2xl bg-nested" />
-    </div>
-  </div>
+    className="h-64 rounded-3xl border border-hairline bg-elevated p-6 animate-pulse"
+  />
+);
+
+// Accessible skeleton fallback while AqiLegend bundle loads
+const AqiLegendSkeleton: React.FC = () => (
+  <div
+    role="status"
+    aria-label="Loading CPCB AQI Scale legend"
+    className="h-48 rounded-3xl border border-hairline bg-elevated p-6 animate-pulse"
+  />
 );
 
 /**
@@ -67,7 +74,10 @@ export const App: React.FC = () => {
       setPlanError(null);
 
       try {
-        const { fetchDayPlan } = await import('@/features/plan/api/plan');
+        const [{ fetchDayPlan }, { computeItemImpact, generateDaySummary }] = await Promise.all([
+          import('@/features/plan/api/plan'),
+          import('@/features/plan/utils/impact'),
+        ]);
         const generated = await fetchDayPlan({
           city: currentAqi.reading.city,
           aqi: currentAqi.reading.aqi,
@@ -178,14 +188,11 @@ export const App: React.FC = () => {
     }
   };
 
-  // Re-compute Day Impact Summary if plan or household changes
+  // Day Impact Summary from active plan
   const daySummary = useMemo(() => {
     if (!aqiResult || !plan) return null;
-    return (
-      plan.summary ??
-      generateDaySummary(aqiResult.reading.aqi, aqiResult.reading.category, household, plan.items)
-    );
-  }, [aqiResult, plan, household]);
+    return plan.summary ?? null;
+  }, [aqiResult, plan]);
 
   return (
     <div className="flex min-h-screen flex-col bg-canvas text-label-primary transition-colors duration-200">
@@ -200,26 +207,18 @@ export const App: React.FC = () => {
             </h2>
 
             <form onSubmit={handleSubmit} className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <div className="relative flex-1">
-                <label htmlFor="city-input" className="sr-only">
-                  Enter city name
-                </label>
-                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-label-secondary" aria-hidden="true">
-                  <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="11" cy="11" r="8" />
-                    <path d="m21 21-4.3-4.3" />
-                  </svg>
-                </div>
-                <input
-                  id="city-input"
-                  type="text"
-                  maxLength={60}
-                  value={cityInput}
-                  onChange={(e) => setCityInput(e.target.value)}
-                  placeholder="Enter any Indian city (e.g., Delhi, Mumbai, Tirupati)..."
-                  className="w-full rounded-2xl border border-hairline bg-nested py-3 pl-11 pr-4 text-sm font-medium text-label-primary placeholder:text-label-secondary transition focus:border-accent-blue focus:bg-elevated focus:outline-none focus:ring-2 focus:ring-accent-blue/20"
-                />
-              </div>
+              <CitySearchAutocomplete
+                value={cityInput}
+                onChange={setCityInput}
+                onSelect={handleCitySelect}
+                onSubmit={() => {
+                  const sanitized = sanitizeCityInput(cityInput);
+                  if (sanitized) {
+                    void loadCityData(sanitized);
+                  }
+                }}
+                disabled={loadingAqi}
+              />
 
               <button
                 type="submit"
@@ -438,7 +437,9 @@ export const App: React.FC = () => {
           </Suspense>
 
           {/* CPCB 6-Band Standard Legend */}
-          <AqiLegend />
+          <Suspense fallback={<AqiLegendSkeleton />}>
+            <AqiLegend />
+          </Suspense>
         </div>
       </main>
 

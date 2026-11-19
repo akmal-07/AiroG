@@ -91,8 +91,9 @@ export async function fetchAqiData(city: string): Promise<AqiFetchResult> {
     // Network or proxy failure: gracefully fall through to demo data
   }
 
-  // 3. Fallback to curated Indian demo data
-  const demoReading = getDemoAqi(city);
+  // 3. Fallback to curated Indian demo data (handles "Tirupati, Andhra Pradesh, IN" -> "Tirupati")
+  const cityNameOnly = city.split(',')[0]?.trim() || city;
+  const demoReading = getDemoAqi(city) || getDemoAqi(cityNameOnly);
   if (demoReading) {
     const forecast = demoReading.forecast || [];
     const bestWindow = findBestOutdoorWindow(forecast);
