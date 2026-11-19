@@ -1,4 +1,4 @@
-import type { AqiBandInfo, CpcbBandKey, ForecastHour, OutdoorWindowInfo } from './types';
+import type { AqiBandInfo, CpcbBandKey, ForecastHour, OutdoorWindowInfo } from '@/types';
 
 /**
  * Standard CPCB (Central Pollution Control Board, India) AQI Bands.
@@ -183,7 +183,6 @@ export function calculateCpcbAqi(pm25?: number, pm10?: number): number {
  * Formats a timestamp or time string into a 12-hour human time (e.g., "2:00 PM").
  */
 export function formatTimeLabel(timeStr: string): string {
-  // If already formatted like "2:00 PM", return as is
   if (/\d+:\d+\s+(?:AM|PM)/i.test(timeStr)) {
     return timeStr;
   }
@@ -205,8 +204,6 @@ export function formatTimeLabel(timeStr: string): string {
 /**
  * Finds the day's best outdoor window (lowest-AQI stretch of 2+ contiguous hours)
  * and the peak smog hour from an hourly forecast.
- *
- * Deterministic math — no AI decision.
  */
 export function findBestOutdoorWindow(forecast: readonly ForecastHour[]): OutdoorWindowInfo {
   if (!forecast || forecast.length === 0) {
@@ -239,7 +236,7 @@ export function findBestOutdoorWindow(forecast: readonly ForecastHour[]): Outdoo
   const peakAqi = Math.round(peakItem.aqi);
   const peakCategory = getAqiBand(peakAqi).key;
 
-  // 2. Find lowest-AQI stretch of 2 contiguous hours (or single if length is 1)
+  // 2. Find lowest-AQI stretch of 2 contiguous hours
   if (forecast.length === 1) {
     const item = forecast[0]!;
     const timeFormatted = formatTimeLabel(item.time);
@@ -256,11 +253,8 @@ export function findBestOutdoorWindow(forecast: readonly ForecastHour[]): Outdoo
     };
   }
 
-  // Search 2-hour window [i, i + 1]
   let bestStartIndex = 0;
   let minWindowSum = Infinity;
-
-  // Window size = 2 hours
   const windowSpan = 2;
   const maxSearchIndex = forecast.length - windowSpan;
 

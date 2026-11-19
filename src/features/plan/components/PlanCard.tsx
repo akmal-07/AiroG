@@ -1,5 +1,5 @@
 import React from 'react';
-import type { PlanItem } from '../lib/types';
+import type { PlanItem } from '@/types';
 
 interface PlanCardProps {
   readonly item: PlanItem;

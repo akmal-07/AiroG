@@ -3,8 +3,8 @@ import {
   generateRuleBasedPlan,
   PlanResponseSchema,
   PlanItemSchema,
-} from '../plan';
-import type { PlanRequestBody } from '../types';
+} from '../api/plan';
+import type { PlanRequestBody } from '@/types';
 
 describe('Deterministic Plan Fallback Engine', () => {
   const mockRequest: PlanRequestBody = {

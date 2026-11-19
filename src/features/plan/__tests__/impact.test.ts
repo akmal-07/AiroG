@@ -5,8 +5,8 @@ import {
   generateDayHeadline,
   generateDaySummary,
   METHOD_LINE,
-} from '../impact';
-import type { Household, PlanItem } from '../types';
+} from '../utils/impact';
+import type { Household, PlanItem } from '@/types';
 
 describe('Deterministic Impact Model', () => {
   const mockHousehold: Household = {

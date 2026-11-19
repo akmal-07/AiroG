@@ -1,6 +1,6 @@
 import React from 'react';
-import type { CpcbBandKey, DayImpactSummary, OutdoorWindowInfo } from '../lib/types';
-import { AqiBadge } from './AqiBadge';
+import type { CpcbBandKey, DayImpactSummary, OutdoorWindowInfo } from '@/types';
+import { AqiBadge } from '@/features/aqi';
 
 interface ImpactBarProps {
   readonly summary: DayImpactSummary;

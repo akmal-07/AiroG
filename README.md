@@ -94,6 +94,58 @@ Rather than presenting a static single number, AiroG analyzes 24-hour hourly for
 - **Methodology Line:** Explicitly displayed across the UI:
   > *"Impact is estimated from the AQI band and your household — not measured."*
 
+### E. Feature-First Project Structure
+The codebase follows a modular feature-first architecture with `@/*` path aliases:
+
+```text
+AiroG/
+├── README.md
+├── .env.example
+├── vercel.json                      # SPA + /api/* routing
+├── index.html
+├── package.json
+├── tsconfig.json                    # includes "@/*": ["src/*"] path alias
+├── vite.config.ts                   # includes "@" resolve alias
+├── api/                             # Vercel serverless proxies (env secrets only)
+│   ├── aqi.ts                       # OpenWeather geocode + current/forecast
+│   └── plan.ts                      # Gemini 1.5 Flash strict JSON draft
+├── docs/                            # Judging & Dual Submission assets
+│   ├── ARCHITECTURE.md              # Data flow, CPCB math, deterministic vs AI split
+│   ├── PROMPTS.md                   # System prompts & Zod schema rules
+│   ├── blog-draft.md                # Medium / Dev.to post
+│   └── linkedin-draft.md            # Build-in-public post
+└── src/
+    ├── app/                         # App shell & global styles
+    │   ├── App.tsx
+    │   └── index.css
+    ├── components/                  # Shared global layout components
+    │   ├── Header.tsx
+    │   └── Footer.tsx
+    ├── features/                    # Feature-first modular domain architecture
+    │   ├── aqi/                     # CPCB calculation & real-time monitoring
+    │   │   ├── api/fetchAqi.ts      # 10-minute session cache + OpenWeather proxy
+    │   │   ├── components/          # AqiBadge, AqiLegend
+    │   │   ├── data/demo.ts         # 10-city curated Indian fallback dataset
+    │   │   ├── utils/aqi.ts         # Deterministic CPCB math & best-window logic
+    │   │   ├── __tests__/           # CPCB unit tests
+    │   │   └── index.ts             # Public feature export barrel
+    │   ├── household/               # Household demographics & local persistence
+    │   │   ├── components/          # HouseholdForm (steppers & toggles)
+    │   │   ├── utils/storage.ts     # Versioned localStorage ('airog_v1')
+    │   │   └── index.ts             # Public feature export barrel
+    │   └── plan/                    # AI plan generation & deterministic impact
+    │       ├── api/plan.ts          # Gemini fetch, Zod schemas & rule fallback
+    │       ├── components/          # PlanSection, PlanCard, ImpactBar
+    │       ├── utils/impact.ts      # 0–100 exposure score & rule traces
+    │       └── __tests__/           # Plan & impact unit tests
+    ├── types/                       # Shared domain TypeScript declarations
+    │   └── index.ts
+    └── main.tsx                     # React entry point
+```
+
+> For deep architectural details, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).  
+> For Gemini prompt templates and validation schemas, see [docs/PROMPTS.md](docs/PROMPTS.md).
+
 ---
 
 ## 3. Performance & Bundle Efficiency
@@ -128,7 +180,7 @@ To achieve a 95+ Efficiency rating, AiroG employs aggressive code splitting and 
 ## 5. End-to-End Data Flow
 
 1. **User Input:** User enters an Indian city or clicks a quick-select pill (e.g., Delhi, Mumbai, Bengaluru, Tirupati) and configures their household demographics in `HouseholdForm` (automatically persisted to `localStorage` under `airog_v1`).
-2. **AQI Retrieval:** `/api/aqi` geocodes the city and queries OpenWeather Air Pollution endpoints. If unconfigured or offline, it falls back seamlessly to curated demo data (`src/data/demo.ts`) labeled with a visible `"demo data"` tag.
+2. **AQI Retrieval:** `/api/aqi` geocodes the city and queries OpenWeather Air Pollution endpoints. If unconfigured or offline, it falls back seamlessly to curated demo data (`src/features/aqi/data/demo.ts`) labeled with a visible `"demo data"` tag.
 3. **CPCB Computation:** Pollutant concentrations ($PM_{2.5}, PM_{10}$) are converted into standard CPCB bands via deterministic math.
 4. **Forecast Windowing:** Hourly forecast vectors are analyzed to find the 2+ hour minimum-AQI window and peak smog hour.
 5. **Plan Synthesis:** `/api/plan` queries Google Gemini 1.5 Flash to synthesize practical routines. Outdoor items are strictly scheduled within the best window.
@@ -187,9 +239,9 @@ npm run build
 ## 8. Test Suite Summary
 
 The automated Vitest test suite (`npm test`) verifies 19 distinct requirements across 3 test modules:
-- `src/lib/__tests__/aqi.test.ts`: CPCB breakpoints, Delhi AQI 312 Very Poor verification, 6-band color-text pairing, 2-hour best window detection, peak smog hour detection, and 10-minute session caching.
-- `src/lib/__tests__/plan.test.ts`: Deterministic fallback generation for vulnerable households, outdoor window scheduling, child/asthma protections, Zod schema validation, and plain-words impact rules.
-- `src/lib/__tests__/impact.test.ts`: Exposure score idempotency ($f(x) = f(x)$), transparent rule traces, `"Comfort, not exposure"` fallback, one-sentence headline generation, and methodology disclosure.
+- `src/features/aqi/__tests__/aqi.test.ts`: CPCB breakpoints, Delhi AQI 312 Very Poor verification, 6-band color-text pairing, 2-hour best window detection, peak smog hour detection, and 10-minute session caching.
+- `src/features/plan/__tests__/plan.test.ts`: Deterministic fallback generation for vulnerable households, outdoor window scheduling, child/asthma protections, Zod schema validation, and plain-words impact rules.
+- `src/features/plan/__tests__/impact.test.ts`: Exposure score idempotency ($f(x) = f(x)$), transparent rule traces, `"Comfort, not exposure"` fallback, one-sentence headline generation, and methodology disclosure.
 
 ---
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import type { AqiFetchResult, DayImpactSummary, DayPlan, PlanCategory } from '../lib/types';
+import type { AqiFetchResult, DayImpactSummary, DayPlan, PlanCategory } from '@/types';
 import { ImpactBar } from './ImpactBar';
 import { PlanCard } from './PlanCard';
 

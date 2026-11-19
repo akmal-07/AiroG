@@ -1,9 +1,6 @@
-import type { AqiReading, ForecastHour } from '../lib/types';
-import { getAqiBand } from '../lib/aqi';
+import type { AqiReading, ForecastHour } from '@/types';
+import { getAqiBand } from '../utils/aqi';
 
-/**
- * Helper to generate hourly forecast data for demo cities.
- */
 function createHourlyForecast(
   hours: readonly { readonly hour: string; readonly aqi: number; readonly pm25: number; readonly pm10: number }[]
 ): ForecastHour[] {

@@ -1,6 +1,6 @@
-import type { AqiFetchResult, AqiReading, ForecastHour } from './types';
+import type { AqiFetchResult, AqiReading, ForecastHour } from '@/types';
 import { getDemoAqi } from '../data/demo';
-import { calculateCpcbAqi, findBestOutdoorWindow, getAqiBand } from './aqi';
+import { calculateCpcbAqi, findBestOutdoorWindow, getAqiBand } from '../utils/aqi';
 
 interface CacheEntry {
   readonly result: AqiFetchResult;
@@ -28,8 +28,6 @@ interface ApiAqiResponse {
  * Fetches AQI for a given city via the serverless proxy /api/aqi.
  * If the API is unavailable, network fails, or keys are missing, falls back to curated Indian demo data.
  * Throws a user-friendly error if the city is unknown to both live API and demo dataset.
- *
- * @param city City name (e.g., "Delhi", "Mumbai")
  */
 export async function fetchAqiData(city: string): Promise<AqiFetchResult> {
   const normalizedKey = city.trim().toLowerCase();

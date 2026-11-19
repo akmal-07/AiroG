@@ -5,8 +5,8 @@ import {
   isCpcbBandKey,
   findBestOutdoorWindow,
   CPCB_BANDS,
-} from '../aqi';
-import type { ForecastHour } from '../types';
+} from '../utils/aqi';
+import type { ForecastHour } from '@/types';
 
 describe('CPCB AQI Math & Breakpoints', () => {
   it('correctly calculates Delhi announcement example (PM2.5: 135.3 -> AQI 312 Very Poor)', () => {
@@ -97,7 +97,7 @@ describe('Forecast & Best Window Detection', () => {
 
 describe('AQI Fetcher & 10-Minute Session Cache', () => {
   it('serves repeated requests from session cache', async () => {
-    const { fetchAqiData } = await import('../fetchAqi');
+    const { fetchAqiData } = await import('../api/fetchAqi');
     const first = await fetchAqiData('Delhi');
     const second = await fetchAqiData('delhi');
 

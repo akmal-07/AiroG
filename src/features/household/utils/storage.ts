@@ -1,4 +1,4 @@
-import type { Household, StorageStateV1 } from './types';
+import type { Household, StorageStateV1 } from '@/types';
 
 export const STORAGE_KEY = 'airog_v1';
 

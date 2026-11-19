@@ -1,5 +1,5 @@
 import React from 'react';
-import { CPCB_BANDS } from '../lib/aqi';
+import { CPCB_BANDS } from '../utils/aqi';
 import { AqiBadge } from './AqiBadge';
 
 const AqiLegendComponent: React.FC = () => {

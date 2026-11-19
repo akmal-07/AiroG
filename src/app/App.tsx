@@ -1,17 +1,14 @@
 import React, { useEffect, useState, useCallback, useMemo, Suspense } from 'react';
-import { Header } from './components/Header';
-import { Footer } from './components/Footer';
-import { AqiLegend } from './components/AqiLegend';
-import { AqiBadge } from './components/AqiBadge';
-import { HouseholdForm } from './components/HouseholdForm';
-import { initStorage, loadHousehold } from './lib/storage';
-import { fetchAqiData } from './lib/fetchAqi';
-import { computeItemImpact, generateDaySummary } from './lib/impact';
-import type { AqiFetchResult, DayPlan, Household, PlanItem } from './lib/types';
+import { Header } from '@/components/Header';
+import { Footer } from '@/components/Footer';
+import { AqiLegend, AqiBadge, fetchAqiData } from '@/features/aqi';
+import { HouseholdForm, initStorage, loadHousehold } from '@/features/household';
+import { computeItemImpact, generateDaySummary } from '@/features/plan/utils/impact';
+import type { AqiFetchResult, DayPlan, Household, PlanItem } from '@/types';
 
 // Code-split below-the-fold PlanSection for optimal initial bundle efficiency
 const PlanSection = React.lazy(() =>
-  import('./components/PlanSection').then((m) => ({ default: m.PlanSection }))
+  import('@/features/plan/components/PlanSection').then((m) => ({ default: m.PlanSection }))
 );
 
 const POPULAR_CITIES = [
@@ -70,7 +67,7 @@ export const App: React.FC = () => {
       setPlanError(null);
 
       try {
-        const { fetchDayPlan } = await import('./lib/plan');
+        const { fetchDayPlan } = await import('@/features/plan/api/plan');
         const generated = await fetchDayPlan({
           city: currentAqi.reading.city,
           aqi: currentAqi.reading.aqi,

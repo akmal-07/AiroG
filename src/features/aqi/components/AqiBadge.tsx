@@ -1,6 +1,6 @@
 import React from 'react';
-import type { AqiBandInfo, CpcbBandKey } from '../lib/types';
-import { getAqiBand, CPCB_BANDS } from '../lib/aqi';
+import type { AqiBandInfo, CpcbBandKey } from '@/types';
+import { getAqiBand, CPCB_BANDS } from '../utils/aqi';
 
 export interface AqiBadgeProps {
   readonly aqi?: number;

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import type { Household } from '../lib/types';
-import { loadHousehold, saveHousehold } from '../lib/storage';
+import type { Household } from '@/types';
+import { loadHousehold, saveHousehold } from '../utils/storage';
 
 interface HouseholdFormProps {
   readonly onHouseholdChange: (household: Household) => void;
@@ -16,7 +16,6 @@ const HouseholdFormComponent: React.FC<HouseholdFormProps> = ({ onHouseholdChang
 
   const updateCount = (field: 'adults' | 'children' | 'elders', delta: number) => {
     setHousehold((prev) => {
-      // Clamped safely between 0 and 20
       const nextVal = Math.max(0, Math.min(20, prev[field] + delta));
       const updated: Household = {
         ...prev,

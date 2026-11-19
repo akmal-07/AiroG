@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { DayPlan, PlanItem, PlanRequestBody } from './types';
+import type { DayPlan, PlanItem, PlanRequestBody } from '@/types';
 
 /**
  * Strict Zod validation schemas for AI-generated and fallback daily plans.
@@ -136,7 +136,6 @@ export function generateRuleBasedPlan(req: PlanRequestBody): DayPlan {
     category: 'greener alternatives',
   });
 
-  // Ensure 5 to 8 items
   const finalItems = items.slice(0, 8);
 
   return {

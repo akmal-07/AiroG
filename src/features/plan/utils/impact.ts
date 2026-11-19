@@ -4,7 +4,7 @@ import type {
   Household,
   ItemImpact,
   PlanItem,
-} from './types';
+} from '@/types';
 
 export const METHOD_LINE = 'Impact is estimated from the AQI band and your household — not measured.';
 
@@ -155,7 +155,6 @@ export function computeDailyExposureScore(
     else if (impact.level === 'Medium') mitigations += 2;
   }
 
-  // Maximum mitigation cap = 35 points
   const cappedMitigations = Math.min(35, mitigations);
 
   const rawScore = environmentalLoad + vulnerability - cappedMitigations;
