@@ -90,10 +90,16 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
   try {
     const host = req.headers.host ?? 'localhost';
     const parsedUrl = new URL(req.url ?? '/', `http://${host}`);
-    const city = parsedUrl.searchParams.get('city')?.trim();
+    const rawCity = parsedUrl.searchParams.get('city')?.trim();
 
-    if (!city) {
+    if (!rawCity) {
       sendJson(400, { error: 'Missing required query parameter "city".' });
+      return;
+    }
+
+    const city = rawCity.replace(/[^\w\s,.-]/gi, '').slice(0, 60);
+    if (!city) {
+      sendJson(400, { error: 'Invalid city name provided.' });
       return;
     }
 
@@ -103,9 +109,9 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
       return;
     }
 
-    // 1. Geocode City
+    // 1. Geocode City (with 15s timeout signal)
     const geoUrl = `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(city)}&limit=1&appid=${encodeURIComponent(apiKey)}`;
-    const geoResponse = await fetch(geoUrl);
+    const geoResponse = await fetch(geoUrl, { signal: AbortSignal.timeout(15000) });
 
     if (!geoResponse.ok) {
       sendJson(geoResponse.status, { error: `Failed to geocode city "${city}".` });
@@ -120,13 +126,13 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
 
     const { lat, lon, name } = geoData[0];
 
-    // 2. Fetch current pollution and forecast in parallel
+    // 2. Fetch current pollution and forecast in parallel (with 15s timeout signal)
     const currentUrl = `https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${encodeURIComponent(apiKey)}`;
     const forecastUrl = `https://api.openweathermap.org/data/2.5/air_pollution/forecast?lat=${lat}&lon=${lon}&appid=${encodeURIComponent(apiKey)}`;
 
     const [currentRes, forecastRes] = await Promise.all([
-      fetch(currentUrl),
-      fetch(forecastUrl),
+      fetch(currentUrl, { signal: AbortSignal.timeout(15000) }),
+      fetch(forecastUrl, { signal: AbortSignal.timeout(15000) }),
     ]);
 
     if (!currentRes.ok || !forecastRes.ok) {
@@ -167,7 +173,12 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
       forecast,
     });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Internal Server Error';
-    sendJson(500, { error: message });
+    const isTimeout = err instanceof Error && (err.name === 'TimeoutError' || err.name === 'AbortError');
+    const message = isTimeout
+      ? 'Upstream pollution provider timed out.'
+      : err instanceof Error
+      ? err.message
+      : 'Internal Server Error';
+    sendJson(isTimeout ? 504 : 500, { error: message });
   }
 }

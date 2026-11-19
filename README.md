@@ -44,7 +44,7 @@ AiroG follows a core design principle: **Use GenAI for natural language habit sy
                                         │
                                         ▼
                            ┌──────────────────────────┐
-                           │  /api/plan (Gemini 1.5)  │ ──(Retry / Invalid)──► [ Rule-Based Plan ]
+                           │  /api/plan (Gemini 2.5)  │ ──(Retry / Invalid)──► [ Rule-Based Plan ]
                            │  Strict JSON Generation  │                        ("standard plan")
                            └──────────────────────────┘
                                         │
@@ -81,8 +81,8 @@ Rather than presenting a static single number, AiroG analyzes 24-hour hourly for
 - **Peak Smog:** Identifies the nocturnal inversion spike (e.g., *Around 8:00 PM* at 368 AQI).
 - Outdoor plan routines are programmatically anchored to this window.
 
-### C. Gemini 1.5 Flash + Zod Validation + Rule-Based Fallback
-- Gemini 1.5 Flash generates 5 to 8 practical action items across three categories: `routines`, `indoor hacks`, and `greener alternatives`.
+### C. Gemini 2.5 Flash + Zod Validation + Rule-Based Fallback
+- Gemini 2.5 Flash generates 5 to 8 practical action items across three categories: `routines`, `indoor hacks`, and `greener alternatives`.
 - **Strict plain-words constraint:** The AI prompt forbids percentages or invented statistics.
 - **Validation:** Responses are validated through strict Zod schemas (`PlanResponseSchema`). If the provider returns invalid JSON, the client retries once.
 - **Deterministic Rule Fallback:** If the API key is unconfigured, network fails, or validation fails twice, the system falls back seamlessly to a local deterministic rule engine (`generateRuleBasedPlan`) labeled `"standard plan"`. Unvalidated AI output is never rendered.
@@ -108,7 +108,7 @@ AiroG/
 ├── vite.config.ts                   # includes "@" resolve alias
 ├── api/                             # Vercel serverless proxies (env secrets only)
 │   ├── aqi.ts                       # OpenWeather geocode + current/forecast
-│   └── plan.ts                      # Gemini 1.5 Flash strict JSON draft
+│   └── plan.ts                      # Gemini 2.5 Flash strict JSON draft
 ├── docs/                            # Judging & Dual Submission assets
 │   ├── ARCHITECTURE.md              # Data flow, CPCB math, deterministic vs AI split
 │   ├── PROMPTS.md                   # System prompts & Zod schema rules
@@ -183,7 +183,7 @@ To achieve a 95+ Efficiency rating, AiroG employs aggressive code splitting and 
 2. **AQI Retrieval:** `/api/aqi` geocodes the city and queries OpenWeather Air Pollution endpoints. If unconfigured or offline, it falls back seamlessly to curated demo data (`src/features/aqi/data/demo.ts`) labeled with a visible `"demo data"` tag.
 3. **CPCB Computation:** Pollutant concentrations ($PM_{2.5}, PM_{10}$) are converted into standard CPCB bands via deterministic math.
 4. **Forecast Windowing:** Hourly forecast vectors are analyzed to find the 2+ hour minimum-AQI window and peak smog hour.
-5. **Plan Synthesis:** `/api/plan` queries Google Gemini 1.5 Flash to synthesize practical routines. Outdoor items are strictly scheduled within the best window.
+5. **Plan Synthesis:** `/api/plan` queries Google Gemini 2.5 Flash to synthesize practical routines. Outdoor items are strictly scheduled within the best window.
 6. **Zod Gate:** Incoming plan JSON is validated through Zod schemas. On failure or timeout, the deterministic rule generator steps in.
 7. **Impact Scoring:** Every action item is assigned a qualitative impact tier (`High` | `Medium` | `Low` | `Comfort`) and an overall 0–100 exposure score is calculated.
 8. **Render:** The UI displays the Hero AQI Card, `ImpactBar`, and categorized plan cards with zero layout shift.
@@ -247,5 +247,5 @@ The automated Vitest test suite (`npm test`) verifies 19 distinct requirements a
 
 ## 9. Submission Metadata
 - **Challenge:** PromptWars Virtual Challenge 06 (Urban Air Quality Assistant)
-- **Built with:** Google Antigravity, React 18, Vite, TypeScript (strict), Tailwind CSS, Zod, Google Gemini 1.5 Flash, OpenWeather API.
+- **Built with:** Google Antigravity, React 18, Vite, TypeScript (strict), Tailwind CSS, Zod, Google Gemini 2.5 Flash, OpenWeather API.
 - **License:** MIT

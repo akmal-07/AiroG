@@ -15,7 +15,7 @@ Large language models can hallucinate numerical thresholds, invent medical perce
 
 AiroG strictly separates concerns:
 1. **Deterministic Core:** Regulatory CPCB sub-index math, diurnal minimum/peak detection, 0–100 exposure scores, and rule traces run entirely in pure TypeScript functions with zero AI involvement.
-2. **AI Layer:** Google Gemini 1.5 Flash is used solely as a creative synthesis engine for localized, practical lifestyle habits and routines.
+2. **AI Layer:** Google Gemini 2.5 Flash is used solely as a creative synthesis engine for localized, practical lifestyle habits and routines.
 3. **Safety Gate:** All AI outputs pass through strict runtime Zod schemas. If any requirement fails, the engine instantly drops the AI output and substitutes a deterministic rule-based plan ("standard plan"). Unvalidated AI output is never rendered.
 
 ---
@@ -59,7 +59,7 @@ AiroG strictly separates concerns:
                                                 │
                                                 ▼
                                    ┌──────────────────────────┐
-                                   │  /api/plan (Gemini 1.5)  │
+                                   │  /api/plan (Gemini 2.5)  │
                                    │  Strict JSON Generation  │
                                    └────────────┬─────────────┘
                                                 │ (Timeout / Validation failure)

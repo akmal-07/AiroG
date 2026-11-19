@@ -129,6 +129,7 @@ REQUIREMENTS:
     const geminiRes = await fetch(geminiUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      signal: AbortSignal.timeout(18000),
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: {
@@ -154,7 +155,12 @@ REQUIREMENTS:
     const parsed = JSON.parse(text) as { readonly items?: unknown };
     sendJson(200, parsed);
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Internal Server Error';
-    sendJson(500, { error: message });
+    const isTimeout = err instanceof Error && (err.name === 'TimeoutError' || err.name === 'AbortError');
+    const message = isTimeout
+      ? 'AI provider response timed out.'
+      : err instanceof Error
+      ? err.message
+      : 'Internal Server Error';
+    sendJson(isTimeout ? 504 : 500, { error: message });
   }
 }

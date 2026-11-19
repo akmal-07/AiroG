@@ -29,7 +29,7 @@ const AqiLegendComponent: React.FC = () => {
         {CPCB_BANDS.map((band) => (
           <li
             key={band.key}
-            className={`flex items-start justify-between rounded-2xl border p-3.5 transition-all shadow-xs ${band.badgeBg} ${band.badgeBorder} ${DARK_BAND_CLASSES[band.key]}`}
+            className={`flex items-start justify-between rounded-2xl border p-4 transition-all shadow-xs ${band.badgeBg} ${band.badgeBorder} ${DARK_BAND_CLASSES[band.key]}`}
           >
             <div className="flex flex-col gap-1 pr-2">
               <div className="flex items-center gap-2">
