@@ -231,7 +231,7 @@ cp .env.example .env
 # Start local development server
 npm run dev
 
-# Run Vitest unit test suite (75 tests across 9 files)
+# Run Vitest unit test suite (78 tests across 9 files)
 npm test
 
 # Run strict TypeScript type-checking across both src/ and api/
@@ -245,8 +245,8 @@ npm run build
 
 ## 8. Test Suite Summary
 
-The automated Vitest test suite (`npm test`) verifies **75 distinct requirements** across 9 test modules:
-- `api/__tests__/utils.test.ts` (7 tests): Hardened CORS allowlist, preview origin reflection, untrusted origin fallback, `Vary: Origin`, method guards (405 + Allow), query sanitization, and environment variable safety.
+The automated Vitest test suite (`npm test`) verifies **78 distinct requirements** across 9 test modules:
+- `api/__tests__/utils.test.ts` (10 tests): Hardened CORS allowlist, preview origin reflection, exact VERCEL_URL isolation, untrusted vercel subdomain rejection, `Vary: Origin`, method guards (405 + Allow), query sanitization, and environment variable safety.
 - `api/__tests__/aqi.test.ts` (12 tests): Serverless AQI endpoint, preflight OPTIONS, city sanitization, direct lat/lon bypass, and error propagation.
 - `api/__tests__/suggest.test.ts` (10 tests): Geocoding autocomplete, short query suppression, rate limit edge caching, and fallback Indian locations.
 - `api/__tests__/plan.test.ts` (9 tests): Gemini 2.5 Flash serverless handler, strict thinking budget (0), payload size limits, and fallback synthesis.

@@ -39,7 +39,7 @@ describe('Serverless Handler: /api/aqi', () => {
     expect(result.headers['vary']).toBe('Origin');
   });
 
-  it('rejects untrusted origin by falling back to production domain', async () => {
+  it('rejects untrusted origin without setting Access-Control-Allow-Origin', async () => {
     const req = createMockRequest({
       method: 'OPTIONS',
       url: '/api/aqi',
@@ -51,7 +51,8 @@ describe('Serverless Handler: /api/aqi', () => {
     const result = getResult();
 
     expect(result.statusCode).toBe(200);
-    expect(result.headers['access-control-allow-origin']).toBe('https://airog.vercel.app');
+    expect(result.headers['access-control-allow-origin']).toBeUndefined();
+    expect(result.headers['vary']).toBe('Origin');
   });
 
   it('returns 400 when city query parameter is missing or empty', async () => {

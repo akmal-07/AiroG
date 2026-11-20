@@ -25,26 +25,55 @@ export const CACHE_CONTROL_NO_STORE = 'no-store';
 export const MAX_QUERY_LENGTH = 60;
 export const MAX_PAYLOAD_SIZE = 1_000_000; // 1 MB
 
-/** Security allowlist for CORS requests */
-export const ALLOWED_ORIGINS: readonly string[] = [
-  'https://airog.vercel.app',
-  'http://localhost:5173',
-  'http://localhost:3000',
-];
+/**
+ * Resolves the authorized origins for incoming API requests.
+ * Allows ONLY:
+ * 1. Production canonical domain: 'https://airog.vercel.app'
+ * 2. Exact Vercel deployment URL: 'https://${process.env.VERCEL_URL}' (when defined)
+ * 3. Localhost development origins ('http://localhost:5173', 'http://localhost:3000') only in non-production.
+ */
+export function getAllowedOrigins(): string[] {
+  const allowed = ['https://airog.vercel.app'];
+
+  const rawVercelUrl = process.env['VERCEL_URL']?.trim();
+  if (rawVercelUrl) {
+    const origin =
+      rawVercelUrl.startsWith('http://') || rawVercelUrl.startsWith('https://')
+        ? rawVercelUrl
+        : `https://${rawVercelUrl}`;
+    if (!allowed.includes(origin)) {
+      allowed.push(origin);
+    }
+  }
+
+  if (process.env['NODE_ENV'] !== 'production') {
+    allowed.push('http://localhost:5173', 'http://localhost:3000');
+  }
+
+  return allowed;
+}
 
 /**
  * Applies security-hardened CORS headers based on request Origin.
- * Matches origin against allowed origins; defaults to 'https://airog.vercel.app'.
  * Always sets 'Vary: Origin' to prevent edge caching confusion.
+ * When req.headers.origin is present and NOT in the allowlist,
+ * it does NOT echo the origin and does NOT set Access-Control-Allow-Origin.
  */
 export function applyCorsHeaders(req: ApiRequest, res: ApiResponse): void {
-  const origin = req.headers?.origin;
-  const isAllowed =
-    typeof origin === 'string' &&
-    (ALLOWED_ORIGINS.includes(origin) || origin.endsWith('.vercel.app'));
-
-  res.setHeader('Access-Control-Allow-Origin', isAllowed ? origin : 'https://airog.vercel.app');
   res.setHeader('Vary', 'Origin');
+
+  const origin = req.headers?.origin;
+
+  // If no Origin header was sent (e.g. same-origin or server-to-server request)
+  if (!origin || typeof origin !== 'string') {
+    res.setHeader('Access-Control-Allow-Origin', 'https://airog.vercel.app');
+    return;
+  }
+
+  const allowedOrigins = getAllowedOrigins();
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
 }
 
 /**
