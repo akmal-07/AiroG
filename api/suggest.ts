@@ -1,5 +1,18 @@
-import type { IncomingMessage, ServerResponse } from 'http';
+import {
+  type ApiRequest,
+  type ApiResponse,
+  ensureMethod,
+  sendJson,
+  getEnv,
+  sanitizeQuery,
+  fetchWithTimeout,
+  TIMEOUT_SUGGEST_MS,
+  CACHE_CONTROL_EDGE,
+} from './_utils.js';
 
+/**
+ * Autocomplete location suggestion item returned to the client.
+ */
 export interface SuggestionItem {
   readonly name: string;
   readonly state?: string;
@@ -110,57 +123,31 @@ function getFallbackMatches(cleanQuery: string): SuggestionItem[] {
 }
 
 /**
- * Serverless handler for live city search autocomplete (/api/suggest?q=...)
+ * Serverless handler for live city search autocomplete (/api/suggest?q=...).
+ * Supports debounce, input sanitization, Indian location prioritization, and graceful offline fallback.
  */
-export default async function handler(req: IncomingMessage, res: ServerResponse): Promise<void> {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  res.setHeader('Content-Type', 'application/json');
-
-  if (req.method === 'OPTIONS') {
-    res.statusCode = 200;
-    res.end();
+export default async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
+  if (!ensureMethod(req, res, ['GET'])) {
     return;
   }
-
-  if (req.method !== 'GET') {
-    res.statusCode = 405;
-    res.end(JSON.stringify({ error: 'Method Not Allowed' }));
-    return;
-  }
-
-  const sendJson = (status: number, data: unknown) => {
-    res.statusCode = status;
-    res.setHeader(
-      'Cache-Control',
-      status === 200 ? 'public, s-maxage=300, stale-while-revalidate=600' : 'no-store'
-    );
-    res.end(JSON.stringify(data));
-  };
 
   try {
     const host = req.headers.host || 'localhost';
     const parsedUrl = new URL(req.url || '', `http://${host}`);
     const rawQuery = parsedUrl.searchParams.get('q') || '';
-
-    // Require >= 2 characters, sanitize input, max 60 characters
-    const cleanQuery = rawQuery
-      .trim()
-      .replace(/[^\w\s,.-]/gi, '')
-      .slice(0, 60);
+    const cleanQuery = sanitizeQuery(rawQuery);
 
     if (cleanQuery.length < 2) {
-      sendJson(200, { suggestions: [] });
+      sendJson(res, 200, { suggestions: [] }, CACHE_CONTROL_EDGE);
       return;
     }
 
-    const apiKey = process.env.OPENWEATHER_API_KEY;
+    const apiKey = getEnv('OPENWEATHER_API_KEY');
 
     // If API key is unconfigured, return graceful fallback matches without error
     if (!apiKey) {
       const fallbacks = getFallbackMatches(cleanQuery);
-      sendJson(200, { suggestions: fallbacks });
+      sendJson(res, 200, { suggestions: fallbacks }, CACHE_CONTROL_EDGE);
       return;
     }
 
@@ -169,14 +156,12 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
       cleanQuery
     )}&limit=6&appid=${encodeURIComponent(apiKey)}`;
 
-    const response = await fetch(geoUrl, {
-      signal: AbortSignal.timeout(8000),
-    });
+    const response = await fetchWithTimeout(geoUrl, {}, TIMEOUT_SUGGEST_MS);
 
     if (!response.ok) {
       // Fallback gracefully on upstream error
       const fallbacks = getFallbackMatches(cleanQuery);
-      sendJson(200, { suggestions: fallbacks });
+      sendJson(res, 200, { suggestions: fallbacks }, CACHE_CONTROL_EDGE);
       return;
     }
 
@@ -186,13 +171,13 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
     // If upstream returned empty, check local fallback
     if (processed.length === 0) {
       const fallbacks = getFallbackMatches(cleanQuery);
-      sendJson(200, { suggestions: fallbacks });
+      sendJson(res, 200, { suggestions: fallbacks }, CACHE_CONTROL_EDGE);
       return;
     }
 
-    sendJson(200, { suggestions: processed });
+    sendJson(res, 200, { suggestions: processed }, CACHE_CONTROL_EDGE);
   } catch (_err: unknown) {
     // Never log or leak keys. Return suggestions gracefully on timeout/errors
-    sendJson(200, { suggestions: [] });
+    sendJson(res, 200, { suggestions: [] }, CACHE_CONTROL_EDGE);
   }
 }

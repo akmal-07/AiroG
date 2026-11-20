@@ -1,6 +1,16 @@
-import type { IncomingMessage, ServerResponse } from 'http';
+import {
+  type ApiRequest,
+  type ApiResponse,
+  ensureMethod,
+  sendJson,
+  sendError,
+  getEnv,
+  readJsonBody,
+  fetchWithTimeout,
+  TIMEOUT_PLAN_MS,
+} from './_utils.js';
 
-interface PlanApiRequestBody {
+export interface PlanApiRequestBody {
   readonly city: string;
   readonly aqi: number;
   readonly pm25?: number;
@@ -37,49 +47,19 @@ interface GeminiResponse {
   };
 }
 
-async function readJsonBody<T>(req: IncomingMessage): Promise<T> {
-  return new Promise((resolve, reject) => {
-    let raw = '';
-    req.on('data', (chunk: Buffer | string) => {
-      raw += chunk;
-      if (raw.length > 1e6) {
-        reject(new Error('Request payload too large'));
-      }
-    });
-    req.on('end', () => {
-      try {
-        resolve(JSON.parse(raw) as T);
-      } catch (err) {
-        reject(err);
-      }
-    });
-    req.on('error', (err) => reject(err));
-  });
-}
-
 /**
  * Serverless API handler: /api/plan
- * Generates personalized daily action plan using Google Gemini.
+ * Generates personalized daily action plan using Google Gemini 2.5 Flash with strict zero-thinking budget.
  */
-export default async function handler(req: IncomingMessage, res: ServerResponse): Promise<void> {
-  const sendJson = (statusCode: number, data: unknown): void => {
-    res.writeHead(statusCode, {
-      'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*',
-      'Cache-Control': 'no-store',
-    });
-    res.end(JSON.stringify(data));
-  };
-
-  if (req.method !== 'POST') {
-    sendJson(405, { error: 'Method not allowed. Use POST.' });
+export default async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
+  if (!ensureMethod(req, res, ['POST'])) {
     return;
   }
 
   try {
-    const apiKey = process.env.GEMINI_API_KEY?.trim();
+    const apiKey = getEnv('GEMINI_API_KEY');
     if (!apiKey) {
-      sendJson(500, { error: 'Gemini API key is not configured on the server.' });
+      sendError(res, 500, 'Gemini API key is not configured on the server.');
       return;
     }
 
@@ -87,7 +67,7 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
     const { city, aqi, pm25, pm10, category, bestWindow, peak, household } = body;
 
     if (!city || typeof aqi !== 'number' || !household) {
-      sendJson(400, { error: 'Invalid request body. Missing required fields.' });
+      sendError(res, 400, 'Invalid request body. Missing required fields.');
       return;
     }
 
@@ -126,24 +106,27 @@ REQUIREMENTS:
 
     const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`;
 
-    const geminiRes = await fetch(geminiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      signal: AbortSignal.timeout(18000),
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.2,
-          responseMimeType: 'application/json',
-          thinkingConfig: {
-            thinkingBudget: 0,
+    const geminiRes = await fetchWithTimeout(
+      geminiUrl,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: 0.2,
+            responseMimeType: 'application/json',
+            thinkingConfig: {
+              thinkingBudget: 0,
+            },
           },
-        },
-      }),
-    });
+        }),
+      },
+      TIMEOUT_PLAN_MS
+    );
 
     if (!geminiRes.ok) {
-      sendJson(502, { error: 'Failed to communicate with AI provider.' });
+      sendError(res, 502, 'Failed to communicate with AI provider.');
       return;
     }
 
@@ -151,12 +134,12 @@ REQUIREMENTS:
     const text = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
 
     if (!text) {
-      sendJson(502, { error: 'Empty response returned by AI provider.' });
+      sendError(res, 502, 'Empty response returned by AI provider.');
       return;
     }
 
     const parsed = JSON.parse(text) as { readonly items?: unknown };
-    sendJson(200, parsed);
+    sendJson(res, 200, parsed);
   } catch (err: unknown) {
     const isTimeout = err instanceof Error && (err.name === 'TimeoutError' || err.name === 'AbortError');
     const message = isTimeout
@@ -164,6 +147,6 @@ REQUIREMENTS:
       : err instanceof Error
       ? err.message
       : 'Internal Server Error';
-    sendJson(isTimeout ? 504 : 500, { error: message });
+    sendError(res, isTimeout ? 504 : 500, message);
   }
 }

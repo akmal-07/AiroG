@@ -1,4 +1,16 @@
-import type { IncomingMessage, ServerResponse } from 'http';
+import {
+  type ApiRequest,
+  type ApiResponse,
+  ensureMethod,
+  sendJson,
+  sendError,
+  getEnv,
+  sanitizeQuery,
+  fetchWithTimeout,
+  TIMEOUT_GEO_MS,
+  TIMEOUT_AQI_MS,
+  CACHE_CONTROL_EDGE,
+} from './_utils.js';
 
 interface OpenWeatherGeo {
   readonly name: string;
@@ -58,8 +70,8 @@ function calculateSubIndex(concentration: number, breakpoints: readonly Breakpoi
       return Math.round(slope * (concentration - bp.bLo) + bp.iLo);
     }
   }
-  const last = breakpoints[breakpoints.length - 1]!;
-  if (concentration > last.bHi) {
+  const last = breakpoints[breakpoints.length - 1];
+  if (last && concentration > last.bHi) {
     const slope = (last.iHi - last.iLo) / (last.bHi - last.bLo);
     return Math.min(500, Math.max(401, Math.round(slope * (concentration - last.bLo) + last.iLo)));
   }
@@ -73,39 +85,34 @@ function computeCpcbAqi(pm25?: number, pm10?: number): number {
 }
 
 /**
- * Serverless API handler: /api/aqi?city=<name>
- * Geocodes city and calls OpenWeather Air Pollution endpoints.
- * Returns CPCB AQI, pollutant components, and hourly forecast.
+ * Serverless API handler: /api/aqi?city=<name>&lat=<lat>&lon=<lon>
+ * Geocodes city (or skips if coordinates provided) and queries OpenWeather Air Pollution endpoints in parallel.
+ * Returns computed CPCB AQI, pollutant components, and 24-hour forecast.
  */
-export default async function handler(req: IncomingMessage, res: ServerResponse): Promise<void> {
-  const sendJson = (statusCode: number, data: unknown): void => {
-    res.writeHead(statusCode, {
-      'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*',
-      'Cache-Control': statusCode === 200 ? 'public, s-maxage=300, stale-while-revalidate=600' : 'no-store',
-    });
-    res.end(JSON.stringify(data));
-  };
+export default async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
+  if (!ensureMethod(req, res, ['GET'])) {
+    return;
+  }
 
   try {
     const host = req.headers.host ?? 'localhost';
     const parsedUrl = new URL(req.url ?? '/', `http://${host}`);
-    const rawCity = parsedUrl.searchParams.get('city')?.trim();
+    const rawCity = parsedUrl.searchParams.get('city');
 
-    if (!rawCity) {
-      sendJson(400, { error: 'Missing required query parameter "city".' });
+    if (!rawCity || !rawCity.trim()) {
+      sendError(res, 400, 'Missing required query parameter "city".');
       return;
     }
 
-    const city = rawCity.replace(/[^\w\s,.-]/gi, '').slice(0, 60);
+    const city = sanitizeQuery(rawCity);
     if (!city) {
-      sendJson(400, { error: 'Invalid city name provided.' });
+      sendError(res, 400, 'Invalid city name provided.');
       return;
     }
 
-    const apiKey = process.env.OPENWEATHER_API_KEY?.trim();
+    const apiKey = getEnv('OPENWEATHER_API_KEY');
     if (!apiKey) {
-      sendJson(500, { error: 'OpenWeather API key is not configured on the server.' });
+      sendError(res, 500, 'OpenWeather API key is not configured on the server.');
       return;
     }
 
@@ -126,20 +133,20 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
     }
 
     if (lat === undefined || lon === undefined) {
-      // 1. Geocode City (with 10s timeout signal)
+      // 1. Geocode City
       const geoUrl = `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(
         city
       )}&limit=1&appid=${encodeURIComponent(apiKey)}`;
-      const geoResponse = await fetch(geoUrl, { signal: AbortSignal.timeout(10000) });
+      const geoResponse = await fetchWithTimeout(geoUrl, {}, TIMEOUT_GEO_MS);
 
       if (!geoResponse.ok) {
-        sendJson(geoResponse.status, { error: `Failed to geocode city "${city}".` });
+        sendError(res, geoResponse.status, `Failed to geocode city "${city}".`);
         return;
       }
 
       const geoData = (await geoResponse.json()) as readonly OpenWeatherGeo[];
       if (!geoData || geoData.length === 0 || !geoData[0]) {
-        sendJson(404, { error: `City "${city}" not found.` });
+        sendError(res, 404, `City "${city}" not found.`);
         return;
       }
 
@@ -148,17 +155,17 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
       name = geoData[0].name;
     }
 
-    // 2. Fetch current pollution and forecast in parallel (with 10s timeout signal)
+    // 2. Fetch current pollution and forecast in parallel
     const currentUrl = `https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${encodeURIComponent(apiKey)}`;
     const forecastUrl = `https://api.openweathermap.org/data/2.5/air_pollution/forecast?lat=${lat}&lon=${lon}&appid=${encodeURIComponent(apiKey)}`;
 
     const [currentRes, forecastRes] = await Promise.all([
-      fetch(currentUrl, { signal: AbortSignal.timeout(10000) }),
-      fetch(forecastUrl, { signal: AbortSignal.timeout(10000) }),
+      fetchWithTimeout(currentUrl, {}, TIMEOUT_AQI_MS),
+      fetchWithTimeout(forecastUrl, {}, TIMEOUT_AQI_MS),
     ]);
 
     if (!currentRes.ok || !forecastRes.ok) {
-      sendJson(502, { error: 'Failed to fetch pollution data from OpenWeather.' });
+      sendError(res, 502, 'Failed to fetch pollution data from OpenWeather.');
       return;
     }
 
@@ -167,7 +174,7 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
 
     const currentItem = currentData.list[0];
     if (!currentItem) {
-      sendJson(502, { error: 'Empty air pollution reading returned from provider.' });
+      sendError(res, 502, 'Empty air pollution reading returned from provider.');
       return;
     }
 
@@ -182,18 +189,23 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
       pm10: f.components.pm10,
     }));
 
-    sendJson(200, {
-      city: name,
-      aqi: computedAqi,
-      pm25: c.pm2_5,
-      pm10: c.pm10,
-      no2: c.no2,
-      o3: c.o3,
-      co: c.co,
-      so2: c.so2,
-      updatedAt: new Date(currentItem.dt * 1000).toISOString(),
-      forecast,
-    });
+    sendJson(
+      res,
+      200,
+      {
+        city: name,
+        aqi: computedAqi,
+        pm25: c.pm2_5,
+        pm10: c.pm10,
+        no2: c.no2,
+        o3: c.o3,
+        co: c.co,
+        so2: c.so2,
+        updatedAt: new Date(currentItem.dt * 1000).toISOString(),
+        forecast,
+      },
+      CACHE_CONTROL_EDGE
+    );
   } catch (err: unknown) {
     const isTimeout = err instanceof Error && (err.name === 'TimeoutError' || err.name === 'AbortError');
     const message = isTimeout
@@ -201,6 +213,6 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
       : err instanceof Error
       ? err.message
       : 'Internal Server Error';
-    sendJson(isTimeout ? 504 : 500, { error: message });
+    sendError(res, isTimeout ? 504 : 500, message);
   }
 }
