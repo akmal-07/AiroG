@@ -36,7 +36,7 @@ AiroG strictly separates concerns:
                      ▼                                                     ▼
       ┌─────────────────────────────┐                       ┌─────────────────────────────┐
       │   fetchAqiData(city)        │                       │   Household Form Storage    │
-      │   (10-minute session cache) │                       │   (localStorage: airog_v1)  │
+      │   (5-minute session cache)  │                       │   (localStorage: airog_v1)  │
       └──────────────┬──────────────┘                       └──────────────┬──────────────┘
                      │                                                     │
                      ▼                                                     │
@@ -184,11 +184,11 @@ Each action item is categorized into one of four deterministic tiers:
 
 ## 6. Bundle Optimization & Code Splitting Architecture
 
-AiroG satisfies strict performance budgets ($\le 188$ kB initial critical JS) while retaining runtime Zod schema validation:
+AiroG satisfies strict performance budgets ($\le 183$ kB initial critical JS) while retaining runtime Zod schema validation:
 
 ```
 [ initial page load ]
-   ├── index-*.js (181.34 kB / 57.24 kB gzip)
+   ├── index-*.js (182.73 kB / 57.65 kB gzip)
    │     ├── React 18 & ReactDOM
    │     ├── AqiHeroCard, CitySearchBar, AqiStatusBanner, Header, Footer
    │     ├── ErrorBoundary & useAirQualityDashboard
@@ -214,7 +214,7 @@ AiroG satisfies strict performance budgets ($\le 188$ kB initial critical JS) wh
 1. **Dynamic Import for Plan Engine:** `src/features/plan/api/plan.ts` is only fetched when the client initiates plan generation (`await import('@/features/plan/api/plan')`). This isolates `zod` entirely from the critical rendering path.
 2. **Modular Architecture:** `src/app/App.tsx` is kept under 120 lines, delegating domain logic to `useAirQualityDashboard.ts`, visual modules (`AqiHeroCard`, `CitySearchBar`, `AqiStatusBanner`), and `useTheme.ts`.
 3. **No Barrel Leakage:** `src/features/plan/` purposefully omits a top-level `index.ts` to prevent bundler tree-shaking failures from pulling heavy validation dependencies into `main`.
-4. **Session Cache:** `fetchAqiData` maintains an in-memory 10-minute cache with city-key normalization, eliminating redundant API round-trips.
+4. **Session Cache:** `fetchAqiData` maintains an in-memory 5-minute cache with city-key normalization, eliminating redundant API round-trips.
 
 ---
 

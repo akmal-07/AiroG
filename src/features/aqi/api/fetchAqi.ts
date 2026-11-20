@@ -47,7 +47,8 @@ interface ApiAqiResponse {
  */
 export async function fetchAqiData(
   city: string,
-  coords?: { lat?: number; lon?: number }
+  coords?: { lat?: number; lon?: number },
+  signal?: AbortSignal
 ): Promise<AqiFetchResult> {
   const normalizedKey = city.trim().toLowerCase();
   if (!normalizedKey) {
@@ -74,7 +75,7 @@ export async function fetchAqiData(
       url += `&lat=${targetCoords.lat}&lon=${targetCoords.lon}`;
     }
 
-    const response = await fetch(url);
+    const response = await fetch(url, { signal });
 
     if (response.ok) {
       const data = (await response.json()) as ApiAqiResponse;
@@ -86,7 +87,7 @@ export async function fetchAqiData(
 
         const category = getAqiBand(computedAqi).key;
         const forecast: readonly ForecastHour[] = Array.isArray(data.forecast) ? data.forecast : [];
-        const bestWindow = findBestOutdoorWindow(forecast);
+        const bestWindow = findBestOutdoorWindow(forecast, computedAqi);
 
         const reading: AqiReading = {
           city: data.city,

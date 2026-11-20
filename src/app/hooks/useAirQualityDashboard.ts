@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { fetchAqiData } from '@/features/aqi/api/fetchAqi';
 import { initStorage, loadHousehold } from '@/features/household/utils/storage';
 import type { AqiFetchResult, DayPlan, Household, PlanItem } from '@/types';
@@ -12,6 +12,13 @@ export const POPULAR_CITIES = [
   'Hyderabad',
   'Tirupati',
 ] as const;
+
+/**
+ * Evaluates whether an asynchronous response should be applied based on request sequence.
+ */
+export function isSequenceCurrent(responseSeq: number, currentSeq: number): boolean {
+  return responseSeq === currentSeq;
+}
 
 /**
  * Sanitizes and validates user city input (max 60 chars, trimmed, stripped of unsafe symbols).
@@ -33,6 +40,7 @@ export function useAirQualityDashboard() {
   const [loadingAqi, setLoadingAqi] = useState(true);
   const [aqiError, setAqiError] = useState<string | null>(null);
   const [aqiResult, setAqiResult] = useState<AqiFetchResult | null>(null);
+  const [searchError, setSearchError] = useState<string | null>(null);
 
   const [household, setHousehold] = useState<Household>(() => initStorage());
   const [plan, setPlan] = useState<DayPlan | null>(null);
@@ -42,8 +50,17 @@ export function useAirQualityDashboard() {
   // Persistent live announcement for assistive technologies
   const [liveAnnouncement, setLiveAnnouncement] = useState('Welcome to AiroG.');
 
+  // Concurrency & race-condition sequence guard refs
+  const requestSeqRef = useRef(0);
+  const aqiAbortRef = useRef<AbortController | null>(null);
+  const planAbortRef = useRef<AbortController | null>(null);
+
   const loadPlanForCurrentState = useCallback(
-    async (currentAqi: AqiFetchResult, currentHousehold: Household) => {
+    async (currentAqi: AqiFetchResult, currentHousehold: Household, targetSeq?: number) => {
+      const seq = targetSeq ?? ++requestSeqRef.current;
+      if (planAbortRef.current) planAbortRef.current.abort();
+      planAbortRef.current = new AbortController();
+
       setLoadingPlan(true);
       setPlanError(null);
 
@@ -52,6 +69,8 @@ export function useAirQualityDashboard() {
           import('@/features/plan/api/plan'),
           import('@/features/plan/utils/impact'),
         ]);
+
+        if (seq !== requestSeqRef.current) return;
 
         const generated = await fetchDayPlan({
           city: currentAqi.reading.city,
@@ -66,6 +85,8 @@ export function useAirQualityDashboard() {
           },
           household: currentHousehold,
         });
+
+        if (seq !== requestSeqRef.current) return;
 
         const enrichedItems: PlanItem[] = generated.items.map((item) => ({
           ...item,
@@ -89,11 +110,15 @@ export function useAirQualityDashboard() {
           `Personalized low-emission day plan generated for ${currentAqi.reading.city}.`
         );
       } catch (err: unknown) {
+        if (seq !== requestSeqRef.current) return;
+        if (err instanceof Error && err.name === 'AbortError') return;
         const msg = err instanceof Error ? err.message : 'Unable to generate day plan.';
         setPlanError(msg);
         setLiveAnnouncement(`Plan error: ${msg}`);
       } finally {
-        setLoadingPlan(false);
+        if (seq === requestSeqRef.current) {
+          setLoadingPlan(false);
+        }
       }
     },
     []
@@ -104,14 +129,22 @@ export function useAirQualityDashboard() {
       const sanitized = sanitizeCityInput(rawCityName);
       if (!sanitized) return;
 
+      const seq = ++requestSeqRef.current;
+      if (aqiAbortRef.current) aqiAbortRef.current.abort();
+      if (planAbortRef.current) planAbortRef.current.abort();
+      aqiAbortRef.current = new AbortController();
+
       setLoadingAqi(true);
       setAqiError(null);
       setLoadingPlan(true);
       setPlanError(null);
+      setPlan(null); // Immediately clear stale plan so old plan never flashes under new hero
       setLiveAnnouncement(`Fetching air quality data for ${sanitized}...`);
 
       try {
-        const result = await fetchAqiData(sanitized);
+        const result = await fetchAqiData(sanitized, undefined, aqiAbortRef.current.signal);
+        if (seq !== requestSeqRef.current) return;
+
         setAqiResult(result);
         setActiveCity(result.reading.city);
         setLoadingAqi(false);
@@ -121,8 +154,10 @@ export function useAirQualityDashboard() {
         );
 
         const currentProfile = loadHousehold();
-        void loadPlanForCurrentState(result, currentProfile);
+        void loadPlanForCurrentState(result, currentProfile, seq);
       } catch (err: unknown) {
+        if (seq !== requestSeqRef.current) return;
+        if (err instanceof Error && err.name === 'AbortError') return;
         const msg = err instanceof Error ? err.message : 'Failed to retrieve air quality data.';
         setAqiError(msg);
         setAqiResult(null);
@@ -149,18 +184,29 @@ export function useAirQualityDashboard() {
     [aqiResult, loadPlanForCurrentState]
   );
 
+  const handleCityInputChange = (value: string) => {
+    if (searchError) setSearchError(null);
+    setCityInput(value);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const sanitized = sanitizeCityInput(cityInput);
-    if (sanitized) {
-      void loadCityData(sanitized);
+    if (!sanitized) {
+      setSearchError('Please enter an Indian city or town name.');
+      return;
     }
+    setSearchError(null);
+    void loadCityData(sanitized);
   };
 
   const handleCitySelect = (cityName: string) => {
     const sanitized = sanitizeCityInput(cityName);
+    setSearchError(null);
     setCityInput(sanitized);
-    void loadCityData(sanitized);
+    if (sanitized) {
+      void loadCityData(sanitized);
+    }
   };
 
   const handleRetryAqi = () => {
@@ -180,11 +226,12 @@ export function useAirQualityDashboard() {
 
   return {
     cityInput,
-    setCityInput,
+    setCityInput: handleCityInputChange,
     activeCity,
     loadingAqi,
     aqiError,
     aqiResult,
+    searchError,
     household,
     plan,
     loadingPlan,

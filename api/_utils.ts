@@ -133,16 +133,6 @@ export function sendError(
 }
 
 /**
- * Sets public edge caching headers with stale-while-revalidate.
- */
-export function setCacheHeaders(
-  res: ApiResponse,
-  cacheControl: string = CACHE_CONTROL_EDGE
-): void {
-  res.setHeader('Cache-Control', cacheControl);
-}
-
-/**
  * Retrieves and trims an environment variable safely, returning undefined if blank.
  */
 export function getEnv(name: string): string | undefined {

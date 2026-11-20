@@ -90,7 +90,23 @@ describe('Serverless Handler: /api/plan', () => {
     const result = getResult();
 
     expect(result.statusCode).toBe(400);
-    expect(result.json()).toEqual({ error: expect.stringContaining('Missing required fields') });
+    expect(result.json()).toEqual({ error: expect.stringContaining('Missing') });
+  });
+
+  it('returns 400 when category is not a recognized CPCB category', async () => {
+    process.env['GEMINI_API_KEY'] = 'test-gemini-key';
+    const req = createMockRequest({
+      method: 'POST',
+      url: '/api/plan',
+      body: { ...validPlanBody, category: 'Dangerous_Injected_Category' },
+    });
+    const { res, getResult } = createMockResponse();
+
+    await handler(req, res);
+    const result = getResult();
+
+    expect(result.statusCode).toBe(400);
+    expect(result.json()).toEqual({ error: expect.stringContaining('Invalid or unrecognized CPCB') });
   });
 
   it('sends thinkingConfig: { thinkingBudget: 0 } to Gemini to eliminate reasoning latency', async () => {

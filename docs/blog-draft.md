@@ -156,20 +156,20 @@ In Challenge 05, our bundle efficiency score was 80/100 because heavy dependenci
 
 In AiroG, we implemented aggressive architectural code splitting:
 1. **Lazy Loading Below the Fold:** The entire plan presentation layer (`PlanSection.tsx` and `PlanCard.tsx`) is wrapped in `React.lazy()` and `<Suspense>`.
-2. **Dynamic Logic Import:** `src/lib/plan.ts` (which imports `zod`) is imported dynamically (`await import('./lib/plan')`) only when a plan calculation is triggered.
-3. **10-Minute In-Memory Session Cache:** In `fetchAqiData()`, cities searched within the last 10 minutes return cached data instantly, eliminating redundant network traffic.
+2. **Dynamic Logic Import:** `src/features/plan/api/plan.ts` (which imports `zod`) is imported dynamically (`await import('@/features/plan/api/plan')`) only when a plan calculation is triggered.
+3. **5-Minute In-Memory Session Cache:** In `fetchAqiData()`, cities searched within the last 5 minutes return cached data instantly, eliminating redundant network traffic.
 
 ### The Measurements:
 - **Before Optimization:** `index-*.js` = **279.98 kB** (84.81 kB gzip)
-- **After Optimization:** `index-*.js` = **181.34 kB** (57.24 kB gzip)
-- **Net Reduction:** **-98.64 kB (-35.2%)** (comfortably under the 188 kB budget)
+- **After Optimization:** `index-*.js` = **182.73 kB** (57.65 kB gzip)
+- **Net Reduction:** **-97.25 kB (-34.7%)** (comfortably under the 183 kB budget)
 - **Lazy Plan Engine Chunk:** 87.10 kB (loaded asynchronously)
 
 ---
 
 ## 7. Testing & Verification
 
-AiroG includes a full Vitest test suite (`npm test`) covering **78 automated unit tests across 9 test suites**:
+AiroG includes a full Vitest test suite (`npm test`) covering **80 automated unit tests across 9 test suites**:
 - Serverless API handlers (`api/_utils.ts`, `api/aqi.ts`, `api/suggest.ts`, `api/plan.ts`) with origin allowlisting and zero-thinking budget.
 - CPCB piecewise interpolation accuracy (including the Delhi AQI 312 benchmark).
 - Diurnal forecast window detection and in-memory cache TTL.

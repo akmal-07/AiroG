@@ -18,6 +18,15 @@ interface CitySearchAutocompleteProps {
   readonly placeholder?: string;
 }
 
+/**
+ * Pure state guard determining whether autocomplete suggestions should be fetched.
+ * Protects against initial-load or programmatic re-triggering.
+ */
+export function shouldFetchSuggestions(isUserTyping: boolean, query: string): boolean {
+  if (!isUserTyping) return false;
+  return query.trim().length >= 2;
+}
+
 export const CitySearchAutocomplete: React.FC<CitySearchAutocompleteProps> = ({
   value,
   onChange,
@@ -38,14 +47,14 @@ export const CitySearchAutocomplete: React.FC<CitySearchAutocompleteProps> = ({
 
   // Debounced search with AbortController (250ms), guarded by user typing state
   useEffect(() => {
-    if (!isUserTypingRef.current) return;
-
     const trimmed = value.trim();
-    if (trimmed.length < 2) {
-      setSuggestions([]);
-      setIsOpen(false);
-      setActiveIndex(-1);
-      setIsLoading(false);
+    if (!shouldFetchSuggestions(isUserTypingRef.current, trimmed)) {
+      if (trimmed.length < 2) {
+        setSuggestions([]);
+        setIsOpen(false);
+        setActiveIndex(-1);
+        setIsLoading(false);
+      }
       return;
     }
 

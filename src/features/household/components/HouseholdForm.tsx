@@ -15,28 +15,25 @@ const HouseholdFormComponent: React.FC<HouseholdFormProps> = ({ onHouseholdChang
   }, []);
 
   const updateCount = (field: 'adults' | 'children' | 'elders', delta: number) => {
-    setHousehold((prev) => {
-      const nextVal = Math.max(0, Math.min(20, prev[field] + delta));
-      const updated: Household = {
-        ...prev,
-        [field]: nextVal,
-      };
-      saveHousehold(updated);
-      onHouseholdChange(updated);
-      return updated;
-    });
+    const nextVal = Math.max(0, Math.min(20, household[field] + delta));
+    if (nextVal === household[field]) return;
+    const updated: Household = {
+      ...household,
+      [field]: nextVal,
+    };
+    setHousehold(updated);
+    saveHousehold(updated);
+    onHouseholdChange(updated);
   };
 
   const handleToggle = (field: 'hasAsthma' | 'hasPurifier') => {
-    setHousehold((prev) => {
-      const updated: Household = {
-        ...prev,
-        [field]: !prev[field],
-      };
-      saveHousehold(updated);
-      onHouseholdChange(updated);
-      return updated;
-    });
+    const updated: Household = {
+      ...household,
+      [field]: !household[field],
+    };
+    setHousehold(updated);
+    saveHousehold(updated);
+    onHouseholdChange(updated);
   };
 
   return (

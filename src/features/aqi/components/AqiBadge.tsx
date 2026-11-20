@@ -59,7 +59,6 @@ const AqiBadgeComponent: React.FC<AqiBadgeProps> = ({
 
   return (
     <span
-      role="status"
       aria-label={accessibleLabel}
       className={`inline-flex items-center rounded-full border font-semibold tracking-tight shadow-xs ${band.badgeBg} ${band.badgeText} ${band.badgeBorder} ${darkClass} ${sizeClasses} ${className}`}
     >

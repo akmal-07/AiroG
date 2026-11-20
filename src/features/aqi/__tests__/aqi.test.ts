@@ -2,10 +2,11 @@ import { describe, it, expect } from 'vitest';
 import {
   calculateCpcbAqi,
   getAqiBand,
-  isCpcbBandKey,
   findBestOutdoorWindow,
   CPCB_BANDS,
 } from '../utils/aqi';
+import { shouldFetchSuggestions } from '../components/CitySearchAutocomplete';
+import { isSequenceCurrent } from '@/app/hooks/useAirQualityDashboard';
 import type { ForecastHour } from '@/types';
 
 describe('CPCB AQI Math & Breakpoints', () => {
@@ -88,10 +89,23 @@ describe('CPCB AQI Math & Breakpoints', () => {
     }
   });
 
-  it('validates CPCB band keys with type guard', () => {
-    expect(isCpcbBandKey('Good')).toBe(true);
-    expect(isCpcbBandKey('Very Poor')).toBe(true);
-    expect(isCpcbBandKey('Hazardous')).toBe(false);
+  it('evaluates shouldFetchSuggestions to prevent rogue dropdown triggering', () => {
+    // Initial mount with value "Delhi" and isUserTyping = false -> false
+    expect(shouldFetchSuggestions(false, 'Delhi')).toBe(false);
+    // After selection isUserTyping = false -> false
+    expect(shouldFetchSuggestions(false, 'Mumbai, Maharashtra')).toBe(false);
+    // User typing with >= 2 characters -> true
+    expect(shouldFetchSuggestions(true, 'De')).toBe(true);
+    expect(shouldFetchSuggestions(true, 'Delhi')).toBe(true);
+    // User typing with < 2 characters -> false
+    expect(shouldFetchSuggestions(true, 'D')).toBe(false);
+    expect(shouldFetchSuggestions(true, '  ')).toBe(false);
+  });
+
+  it('rejects stale async sequence responses when a newer request has started', () => {
+    expect(isSequenceCurrent(1, 1)).toBe(true);
+    expect(isSequenceCurrent(1, 2)).toBe(false);
+    expect(isSequenceCurrent(2, 3)).toBe(false);
   });
 });
 
@@ -120,11 +134,20 @@ describe('Forecast & Best Window Detection', () => {
     expect(windowInfo.peakCategory).toBe('Very Poor');
   });
 
-  it('handles empty forecast gracefully with safe fallback', () => {
-    const fallback = findBestOutdoorWindow([]);
-    expect(fallback.windowText).toBeTruthy();
-    expect(fallback.peakHour).toBeTruthy();
-    expect(fallback.averageAqi).toBeGreaterThan(0);
+  it('handles empty forecast gracefully without inventing hardcoded numbers', () => {
+    const fallbackWithAqi = findBestOutdoorWindow([], 250);
+    expect(fallbackWithAqi.windowText).toBe('Forecast window unavailable');
+    expect(fallbackWithAqi.startHour).toBe('Unavailable');
+    expect(fallbackWithAqi.peakHour).toBe('Unavailable');
+    expect(fallbackWithAqi.averageAqi).toBe(250);
+    expect(fallbackWithAqi.peakAqi).toBe(250);
+    expect(fallbackWithAqi.category).toBe('Poor');
+
+    const defaultFallback = findBestOutdoorWindow([]);
+    expect(defaultFallback.averageAqi).toBe(0);
+    expect(defaultFallback.windowText).toBe('Forecast window unavailable');
+    expect(defaultFallback.averageAqi).not.toBe(150);
+    expect(defaultFallback.peakAqi).not.toBe(320);
   });
 });
 

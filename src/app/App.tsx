@@ -29,6 +29,7 @@ export const App: React.FC = () => {
     loadingAqi,
     aqiError,
     aqiResult,
+    searchError,
     plan,
     loadingPlan,
     planError,
@@ -63,6 +64,7 @@ export const App: React.FC = () => {
             activeCity={activeCity}
             loadingAqi={loadingAqi}
             popularCities={POPULAR_CITIES}
+            searchError={searchError}
             onChangeCityInput={setCityInput}
             onSelectCity={handleCitySelect}
             onSubmit={handleSubmit}

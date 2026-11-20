@@ -1,4 +1,4 @@
-import type { AqiBandInfo, CpcbBandKey, ForecastHour, OutdoorWindowInfo } from '@/types';
+import type { AqiBandInfo } from '@/types';
 
 /**
  * Standard CPCB (Central Pollution Control Board, India) AQI Bands.
@@ -101,13 +101,6 @@ export function getAqiBand(aqi: number): AqiBandInfo {
   return CPCB_BANDS[5]!;
 }
 
-/**
- * Returns whether a given key is a recognized CPCB AQI category.
- */
-export function isCpcbBandKey(key: string): key is CpcbBandKey {
-  return CPCB_BANDS.some((band) => band.key === key);
-}
-
 // CPCB official pollutant concentration breakpoint definitions
 interface Breakpoint {
   readonly bLo: number;
@@ -179,109 +172,5 @@ export function calculateCpcbAqi(pm25?: number, pm10?: number): number {
   return overall > 0 ? overall : 0;
 }
 
-/**
- * Formats a timestamp or time string into a 12-hour human time (e.g., "2:00 PM").
- */
-export function formatTimeLabel(timeStr: string): string {
-  if (/\d+:\d+\s+(?:AM|PM)/i.test(timeStr)) {
-    return timeStr;
-  }
-  try {
-    const date = new Date(timeStr);
-    if (!Number.isNaN(date.getTime())) {
-      return date.toLocaleTimeString('en-IN', {
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true,
-      });
-    }
-  } catch {
-    // Ignore and fallback
-  }
-  return timeStr;
-}
-
-/**
- * Finds the day's best outdoor window (lowest-AQI stretch of 2+ contiguous hours)
- * and the peak smog hour from an hourly forecast.
- */
-export function findBestOutdoorWindow(forecast: readonly ForecastHour[]): OutdoorWindowInfo {
-  if (!forecast || forecast.length === 0) {
-    return {
-      startHour: '2:00 PM',
-      endHour: '4:00 PM',
-      windowText: '2:00 PM – 4:00 PM',
-      averageAqi: 150,
-      category: 'Moderate',
-      peakHour: '8:00 PM',
-      peakAqi: 320,
-      peakCategory: 'Very Poor',
-    };
-  }
-
-  // 1. Find the peak smog hour
-  let peakIndex = 0;
-  let maxAqi = -1;
-
-  for (let i = 0; i < forecast.length; i++) {
-    const item = forecast[i]!;
-    if (item.aqi > maxAqi) {
-      maxAqi = item.aqi;
-      peakIndex = i;
-    }
-  }
-
-  const peakItem = forecast[peakIndex]!;
-  const peakHour = formatTimeLabel(peakItem.time);
-  const peakAqi = Math.round(peakItem.aqi);
-  const peakCategory = getAqiBand(peakAqi).key;
-
-  // 2. Find lowest-AQI stretch of 2 contiguous hours
-  if (forecast.length === 1) {
-    const item = forecast[0]!;
-    const timeFormatted = formatTimeLabel(item.time);
-    const aqi = Math.round(item.aqi);
-    return {
-      startHour: timeFormatted,
-      endHour: timeFormatted,
-      windowText: timeFormatted,
-      averageAqi: aqi,
-      category: getAqiBand(aqi).key,
-      peakHour,
-      peakAqi,
-      peakCategory,
-    };
-  }
-
-  let bestStartIndex = 0;
-  let minWindowSum = Infinity;
-  const windowSpan = 2;
-  const maxSearchIndex = forecast.length - windowSpan;
-
-  for (let i = 0; i <= maxSearchIndex; i++) {
-    const sum = forecast[i]!.aqi + forecast[i + 1]!.aqi;
-    if (sum < minWindowSum) {
-      minWindowSum = sum;
-      bestStartIndex = i;
-    }
-  }
-
-  const startItem = forecast[bestStartIndex]!;
-  const endItem = forecast[bestStartIndex + 1]!;
-  const avgAqi = Math.round(minWindowSum / windowSpan);
-
-  const startHour = formatTimeLabel(startItem.time);
-  const endHour = formatTimeLabel(endItem.time);
-  const windowText = `${startHour} – ${endHour}`;
-
-  return {
-    startHour,
-    endHour,
-    windowText,
-    averageAqi: avgAqi,
-    category: getAqiBand(avgAqi).key,
-    peakHour,
-    peakAqi,
-    peakCategory,
-  };
-}
+// Re-export forecast windowing logic from specialized modular sub-utility
+export { formatTimeLabel, findBestOutdoorWindow } from './forecastWindow';

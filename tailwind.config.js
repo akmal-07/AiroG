@@ -27,16 +27,6 @@ export default {
         "label-secondary": "var(--label-secondary)",
         "accent-blue": "var(--accent-blue)",
         glass: "var(--glass-bg)",
-
-        // CPCB AQI Scale color palette mapped to accessible tokens
-        cpcb: {
-          good: "#00b050",
-          satisfactory: "#92d050",
-          moderate: "#ffff00",
-          poor: "#ff9900",
-          veryPoor: "#ff0000",
-          severe: "#c00000",
-        },
       },
       boxShadow: {
         apple: "0 2px 12px rgba(0, 0, 0, 0.04)",

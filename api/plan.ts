@@ -7,8 +7,18 @@ import {
   getEnv,
   readJsonBody,
   fetchWithTimeout,
+  sanitizeQuery,
   TIMEOUT_PLAN_MS,
 } from './_utils.js';
+
+const VALID_CPCB_CATEGORIES = new Set([
+  'Good',
+  'Satisfactory',
+  'Moderate',
+  'Poor',
+  'Very Poor',
+  'Severe',
+]);
 
 export interface PlanApiRequestBody {
   readonly city: string;
@@ -66,15 +76,23 @@ export default async function handler(req: ApiRequest, res: ApiResponse): Promis
     const body = await readJsonBody<PlanApiRequestBody>(req);
     const { city, aqi, pm25, pm10, category, bestWindow, peak, household } = body;
 
-    if (!city || typeof aqi !== 'number' || !household) {
-      sendError(res, 400, 'Invalid request body. Missing required fields.');
+    const sanitizedCity = typeof city === 'string' ? sanitizeQuery(city) : '';
+    if (!sanitizedCity || typeof aqi !== 'number' || !household) {
+      sendError(res, 400, 'Invalid request body. Missing or invalid required fields.');
       return;
     }
 
+    if (!category || typeof category !== 'string' || !VALID_CPCB_CATEGORIES.has(category.trim())) {
+      sendError(res, 400, 'Invalid or unrecognized CPCB air quality category.');
+      return;
+    }
+
+    const cleanCategory = category.trim();
+
     const prompt = `You are AiroG, a specialized urban air quality advisor helping an Indian family navigate winter smog.
 Generate a tailored daily action plan for:
-- City: ${city}
-- AQI: ${aqi} (CPCB Category: ${category})
+- City: ${sanitizedCity}
+- AQI: ${aqi} (CPCB Category: ${cleanCategory})
 - PM2.5: ${pm25 ?? 'N/A'} µg/m³, PM10: ${pm10 ?? 'N/A'} µg/m³
 - Best Outdoor Window: ${bestWindow?.windowText ?? 'Afternoon'} (Avg AQI: ${bestWindow?.averageAqi ?? 'Moderate'})
 - Peak Smog Hour: ${peak?.hour ?? 'Evening'} (Peak AQI: ${peak?.aqi ?? 350})

@@ -1,5 +1,6 @@
 import React from 'react';
 import { AqiBadge } from './AqiBadge';
+import { formatTimeLabel } from '../utils/forecastWindow';
 import type { AqiFetchResult } from '@/types';
 
 export interface AqiHeroCardProps {
@@ -12,12 +13,7 @@ export interface AqiHeroCardProps {
  */
 export const AqiHeroCard: React.FC<AqiHeroCardProps> = ({ aqiResult }) => {
   const { reading, bestWindow, isDemo } = aqiResult;
-
-  const formattedTime = `${new Date(reading.updatedAt).toLocaleTimeString('en-IN', {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-  })} IST`;
+  const formattedTime = `${formatTimeLabel(reading.updatedAt)} IST`;
 
   return (
     <section
@@ -34,23 +30,20 @@ export const AqiHeroCard: React.FC<AqiHeroCardProps> = ({ aqiResult }) => {
             >
               {reading.city}
             </h2>
-            {isDemo ? (
+            <span
+              className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-semibold ${
+                isDemo
+                  ? 'bg-amber-50 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/50 text-amber-800'
+                  : 'bg-emerald-50 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/50 text-emerald-800'
+              }`}
+              title={isDemo ? 'Using curated Indian demo dataset' : 'Live telemetry from OpenWeatherMap'}
+            >
               <span
-                className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/50 px-2.5 py-0.5 text-xs font-semibold text-amber-800"
-                title="Using curated Indian demo dataset. Configure OPENWEATHER_API_KEY for live readings."
-              >
-                <span className="h-1.5 w-1.5 rounded-full bg-amber-500" aria-hidden="true" />
-                Demo Dataset
-              </span>
-            ) : (
-              <span
-                className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/50 px-2.5 py-0.5 text-xs font-semibold text-emerald-800"
-                title="Live telemetry from OpenWeatherMap"
-              >
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" aria-hidden="true" />
-                Live Data
-              </span>
-            )}
+                className={`h-1.5 w-1.5 rounded-full ${isDemo ? 'bg-amber-500' : 'bg-emerald-500 animate-pulse'}`}
+                aria-hidden="true"
+              />
+              {isDemo ? 'Demo Dataset' : 'Live Data'}
+            </span>
           </div>
           <p className="text-xs sm:text-sm text-label-secondary mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
             <span className="font-medium text-label-primary">

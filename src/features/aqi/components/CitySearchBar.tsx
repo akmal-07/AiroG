@@ -6,6 +6,7 @@ export interface CitySearchBarProps {
   readonly activeCity: string;
   readonly loadingAqi: boolean;
   readonly popularCities: readonly string[];
+  readonly searchError?: string | null;
   readonly onChangeCityInput: (value: string) => void;
   readonly onSelectCity: (cityName: string) => void;
   readonly onSubmit: (e: React.FormEvent) => void;
@@ -20,6 +21,7 @@ export const CitySearchBar: React.FC<CitySearchBarProps> = ({
   activeCity,
   loadingAqi,
   popularCities,
+  searchError,
   onChangeCityInput,
   onSelectCity,
   onSubmit,
@@ -38,10 +40,7 @@ export const CitySearchBar: React.FC<CitySearchBarProps> = ({
           value={cityInput}
           onChange={onChangeCityInput}
           onSelect={onSelectCity}
-          onSubmit={() => {
-            const clean = cityInput.trim().replace(/[^\w\s,.-]/gi, '').slice(0, 60);
-            if (clean) onSelectCity(clean);
-          }}
+          onSubmit={() => onSelectCity(cityInput)}
           disabled={loadingAqi}
         />
         <button
@@ -53,6 +52,12 @@ export const CitySearchBar: React.FC<CitySearchBarProps> = ({
         </button>
       </form>
 
+      {searchError && (
+        <p role="alert" className="text-xs font-medium text-rose-600 dark:text-rose-400 pl-1">
+          {searchError}
+        </p>
+      )}
+
       <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-hairline">
         <span className="text-xs font-semibold text-label-secondary">Quick select:</span>
         <div className="flex flex-wrap gap-2" role="group" aria-label="Quick select cities">
@@ -63,8 +68,9 @@ export const CitySearchBar: React.FC<CitySearchBarProps> = ({
                 key={c}
                 type="button"
                 aria-pressed={isSelected}
+                disabled={loadingAqi}
                 onClick={() => onSelectCity(c)}
-                className={`rounded-full px-3.5 py-1 text-xs font-semibold transition active:scale-95 focus-visible:outline-2 focus-visible:outline-accent-blue ${
+                className={`rounded-full px-3.5 py-1 text-xs font-semibold transition active:scale-95 focus-visible:outline-2 focus-visible:outline-accent-blue disabled:opacity-50 disabled:cursor-not-allowed ${
                   isSelected
                     ? 'bg-label-primary text-canvas shadow-xs'
                     : 'bg-nested text-label-primary hover:opacity-80 border border-hairline'
