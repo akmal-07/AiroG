@@ -13,11 +13,11 @@ export interface AqiHeroCardProps {
 export const AqiHeroCard: React.FC<AqiHeroCardProps> = ({ aqiResult }) => {
   const { reading, bestWindow, isDemo } = aqiResult;
 
-  const formattedTime = new Date(reading.updatedAt).toLocaleTimeString('en-IN', {
+  const formattedTime = `${new Date(reading.updatedAt).toLocaleTimeString('en-IN', {
     hour: 'numeric',
     minute: '2-digit',
     hour12: true,
-  });
+  })} IST`;
 
   return (
     <section
@@ -34,18 +34,30 @@ export const AqiHeroCard: React.FC<AqiHeroCardProps> = ({ aqiResult }) => {
             >
               {reading.city}
             </h2>
-            {isDemo && (
+            {isDemo ? (
               <span
-                className="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/50 px-2.5 py-0.5 text-xs font-semibold text-amber-800"
+                className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/50 px-2.5 py-0.5 text-xs font-semibold text-amber-800"
                 title="Using curated Indian demo dataset. Configure OPENWEATHER_API_KEY for live readings."
               >
                 <span className="h-1.5 w-1.5 rounded-full bg-amber-500" aria-hidden="true" />
-                demo data
+                Demo Dataset
+              </span>
+            ) : (
+              <span
+                className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/50 px-2.5 py-0.5 text-xs font-semibold text-emerald-800"
+                title="Live telemetry from OpenWeatherMap"
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" aria-hidden="true" />
+                Live Data
               </span>
             )}
           </div>
-          <p className="text-xs sm:text-sm text-label-secondary mt-1">
-            Indian CPCB Scale &bull; Updated {formattedTime}
+          <p className="text-xs sm:text-sm text-label-secondary mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+            <span className="font-medium text-label-primary">
+              {isDemo ? 'Demo: Curated CPCB Dataset' : 'Live: OpenWeatherMap \u00B7 CPCB NAQI'}
+            </span>
+            <span aria-hidden="true">&bull;</span>
+            <span>Updated {formattedTime}</span>
           </p>
         </div>
 

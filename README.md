@@ -8,6 +8,18 @@
 
 ---
 
+## ⚡ Evaluator Sample Inputs & Test Scenarios
+
+To quickly evaluate AiroG's real-time capabilities across varied demographic vulnerabilities, smog intensities, and city tiers, try these 3 copy-ready evaluator scenarios:
+
+| # | Persona & City | Household Configuration | Expected Evaluator Observations |
+| :-: | :--- | :--- | :--- |
+| **1** | **Vulnerable Family in Severe Winter Smog**<br>• City: `Delhi` (or click *Delhi* quick-pill) | • **Children:** 2<br>• **Elders:** 1<br>• **Asthma:** ✅ Yes<br>• **Air Purifier:** ❌ No | • **Prominent Telemetry:** Hero card displays live CPCB AQI readout (`Live: OpenWeatherMap · CPCB NAQI` or demo badge) with local timestamp (`Updated ... IST`).<br>• **Diurnal Inversion Window:** Identifies the daytime smog break (e.g., ~1:00 PM – 4:00 PM) vs. severe evening inversion (~8:00 PM peak).<br>• **AI-Tailored Plan:** Gemini drafts high-protection protocols (school commute precautions, wet mopping, clean-room isolation).<br>• **Dynamic Exposure Score:** Elevated vulnerability score highlights urgent risk with traceable, deterministic rule explanations. |
+| **2** | **Working Commuter with Mechanical Filtration**<br>• City: `Mumbai` or `Bengaluru` | • **Children:** 0<br>• **Elders:** 0<br>• **Asthma:** ❌ No<br>• **Air Purifier:** ✅ Yes | • **Coastal / Plateau Dynamics:** Lower baseline AQI with vehicular rush-hour smog spikes.<br>• **Purifier-Optimized Action Items:** HEPA runtime schedules, window seal timings before evening rush hour, and N95 commuter guidance.<br>• **Immediate Exposure Drop:** Real-time score decreases reflecting mechanical indoor particulate capture. |
+| **3** | **Tier-2 / Tier-3 Regional Search**<br>• City: `Tirupati, Andhra Pradesh` (type `Tirupati` in autocomplete) | • **Children:** 1<br>• **Elders:** 0<br>• **Asthma:** ❌ No<br>• **Air Purifier:** ❌ No | • **Accessible Autocomplete:** Geocoding suggestions dropdown with live screen reader count feedback (`... suggestions available`).<br>• **Direct Coordinate Resolution:** Serverless geocoding retrieves coordinates with zero client-side secret exposure.<br>• **Balanced Action Plan:** Synthesizes outdoor playtime inside the lowest-AQI stretch with transparent impact indicators (`"Comfort, not exposure"` vs `"High Impact"`). |
+
+---
+
 ## 1. Problem & Chosen Vertical
 During North Indian winter months, severe atmospheric temperature inversions trap vehicular emissions, crop residue smoke, and industrial particulates close to ground level. Metropolitan cities routinely plunge into hazardous air quality conditions (e.g., Delhi AQI ~312 **Very Poor** or **Severe** 400+).
 
