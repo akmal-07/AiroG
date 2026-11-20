@@ -7,8 +7,24 @@ interface CacheEntry {
   readonly timestamp: number;
 }
 
-const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes session cache
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5-minute session cache for instant (0ms) repeat switching
 const aqiCache = new Map<string, CacheEntry>();
+
+/** Known coordinates for popular cities to skip geocoding round-trips */
+const KNOWN_COORDINATES: Record<string, { lat: number; lon: number }> = {
+  delhi: { lat: 28.6139, lon: 77.209 },
+  mumbai: { lat: 19.076, lon: 72.8777 },
+  bengaluru: { lat: 12.9716, lon: 77.5946 },
+  kolkata: { lat: 22.5726, lon: 88.3639 },
+  chennai: { lat: 13.0827, lon: 80.2707 },
+  hyderabad: { lat: 17.385, lon: 78.4867 },
+  tirupati: { lat: 13.6288, lon: 79.4192 },
+  indiranagar: { lat: 12.9784, lon: 77.6408 },
+  pune: { lat: 18.5204, lon: 73.8567 },
+  ahmedabad: { lat: 23.0225, lon: 72.5714 },
+  jaipur: { lat: 26.9124, lon: 75.7873 },
+  lucknow: { lat: 26.8467, lon: 80.9462 },
+};
 
 interface ApiAqiResponse {
   readonly city: string;
@@ -29,13 +45,16 @@ interface ApiAqiResponse {
  * If the API is unavailable, network fails, or keys are missing, falls back to curated Indian demo data.
  * Throws a user-friendly error if the city is unknown to both live API and demo dataset.
  */
-export async function fetchAqiData(city: string): Promise<AqiFetchResult> {
+export async function fetchAqiData(
+  city: string,
+  coords?: { lat?: number; lon?: number }
+): Promise<AqiFetchResult> {
   const normalizedKey = city.trim().toLowerCase();
   if (!normalizedKey) {
     throw new Error('Please enter a valid city name.');
   }
 
-  // 1. Check in-memory cache
+  // 1. Check in-memory cache (instant 0ms on repeat)
   const cached = aqiCache.get(normalizedKey);
   const now = Date.now();
   if (cached && now - cached.timestamp < CACHE_TTL_MS) {
@@ -44,7 +63,18 @@ export async function fetchAqiData(city: string): Promise<AqiFetchResult> {
 
   // 2. Attempt live serverless API fetch
   try {
-    const response = await fetch(`/api/aqi?city=${encodeURIComponent(city.trim())}`);
+    const targetCoords =
+      coords?.lat !== undefined && coords?.lon !== undefined
+        ? coords
+        : KNOWN_COORDINATES[normalizedKey] ||
+          KNOWN_COORDINATES[normalizedKey.split(',')[0]?.trim() || ''];
+
+    let url = `/api/aqi?city=${encodeURIComponent(city.trim())}`;
+    if (targetCoords?.lat !== undefined && targetCoords?.lon !== undefined) {
+      url += `&lat=${targetCoords.lat}&lon=${targetCoords.lon}`;
+    }
+
+    const response = await fetch(url);
 
     if (response.ok) {
       const data = (await response.json()) as ApiAqiResponse;

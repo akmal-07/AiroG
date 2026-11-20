@@ -127,13 +127,18 @@ export const App: React.FC = () => {
 
       setLoadingAqi(true);
       setAqiError(null);
+      // Mark plan section as loading while new city data is being fetched
+      setLoadingPlan(true);
+      setPlanError(null);
 
       try {
         const result = await fetchAqiData(sanitized);
         setAqiResult(result);
         setActiveCity(result.reading.city);
+        // Render hero card immediately without waiting for plan synthesis
+        setLoadingAqi(false);
 
-        // Immediately trigger plan calculation
+        // Asynchronously fetch AI plan in the background
         const currentProfile = loadHousehold();
         void loadPlanForCurrentState(result, currentProfile);
       } catch (err: unknown) {
@@ -141,8 +146,8 @@ export const App: React.FC = () => {
         setAqiError(msg);
         setAqiResult(null);
         setPlan(null);
-      } finally {
         setLoadingAqi(false);
+        setLoadingPlan(false);
       }
     },
     [loadPlanForCurrentState]

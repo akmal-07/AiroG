@@ -82,7 +82,7 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
     res.writeHead(statusCode, {
       'Content-Type': 'application/json',
       'Access-Control-Allow-Origin': '*',
-      'Cache-Control': statusCode === 200 ? 'public, s-maxage=600, stale-while-revalidate=300' : 'no-store',
+      'Cache-Control': statusCode === 200 ? 'public, s-maxage=300, stale-while-revalidate=600' : 'no-store',
     });
     res.end(JSON.stringify(data));
   };
@@ -109,30 +109,52 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
       return;
     }
 
-    // 1. Geocode City (with 15s timeout signal)
-    const geoUrl = `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(city)}&limit=1&appid=${encodeURIComponent(apiKey)}`;
-    const geoResponse = await fetch(geoUrl, { signal: AbortSignal.timeout(15000) });
+    // Check optional lat and lon query parameters to skip geocoding completely
+    const rawLat = parsedUrl.searchParams.get('lat');
+    const rawLon = parsedUrl.searchParams.get('lon');
+    let lat: number | undefined;
+    let lon: number | undefined;
+    let name = city;
 
-    if (!geoResponse.ok) {
-      sendJson(geoResponse.status, { error: `Failed to geocode city "${city}".` });
-      return;
+    if (rawLat && rawLon) {
+      const parsedLat = parseFloat(rawLat);
+      const parsedLon = parseFloat(rawLon);
+      if (Number.isFinite(parsedLat) && Number.isFinite(parsedLon)) {
+        lat = parsedLat;
+        lon = parsedLon;
+      }
     }
 
-    const geoData = (await geoResponse.json()) as readonly OpenWeatherGeo[];
-    if (!geoData || geoData.length === 0 || !geoData[0]) {
-      sendJson(404, { error: `City "${city}" not found.` });
-      return;
+    if (lat === undefined || lon === undefined) {
+      // 1. Geocode City (with 10s timeout signal)
+      const geoUrl = `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(
+        city
+      )}&limit=1&appid=${encodeURIComponent(apiKey)}`;
+      const geoResponse = await fetch(geoUrl, { signal: AbortSignal.timeout(10000) });
+
+      if (!geoResponse.ok) {
+        sendJson(geoResponse.status, { error: `Failed to geocode city "${city}".` });
+        return;
+      }
+
+      const geoData = (await geoResponse.json()) as readonly OpenWeatherGeo[];
+      if (!geoData || geoData.length === 0 || !geoData[0]) {
+        sendJson(404, { error: `City "${city}" not found.` });
+        return;
+      }
+
+      lat = geoData[0].lat;
+      lon = geoData[0].lon;
+      name = geoData[0].name;
     }
 
-    const { lat, lon, name } = geoData[0];
-
-    // 2. Fetch current pollution and forecast in parallel (with 15s timeout signal)
+    // 2. Fetch current pollution and forecast in parallel (with 10s timeout signal)
     const currentUrl = `https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${encodeURIComponent(apiKey)}`;
     const forecastUrl = `https://api.openweathermap.org/data/2.5/air_pollution/forecast?lat=${lat}&lon=${lon}&appid=${encodeURIComponent(apiKey)}`;
 
     const [currentRes, forecastRes] = await Promise.all([
-      fetch(currentUrl, { signal: AbortSignal.timeout(15000) }),
-      fetch(forecastUrl, { signal: AbortSignal.timeout(15000) }),
+      fetch(currentUrl, { signal: AbortSignal.timeout(10000) }),
+      fetch(forecastUrl, { signal: AbortSignal.timeout(10000) }),
     ]);
 
     if (!currentRes.ok || !forecastRes.ok) {

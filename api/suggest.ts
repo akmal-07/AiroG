@@ -132,7 +132,10 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
 
   const sendJson = (status: number, data: unknown) => {
     res.statusCode = status;
-    res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=300');
+    res.setHeader(
+      'Cache-Control',
+      status === 200 ? 'public, s-maxage=300, stale-while-revalidate=600' : 'no-store'
+    );
     res.end(JSON.stringify(data));
   };
 
