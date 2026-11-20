@@ -251,7 +251,7 @@ cp .env.example .env
 # Start local development server
 npm run dev
 
-# Run Vitest unit test suite (81 tests across 9 files)
+# Run Vitest unit test suite (84 tests across 9 files)
 npm test
 
 # Run strict TypeScript type-checking across both src/ and api/
@@ -265,14 +265,14 @@ npm run build
 
 ## 8. Test Suite Summary
 
-The automated Vitest test suite (`npm test`) verifies **81 distinct requirements** across 9 test modules:
+The automated Vitest test suite (`npm test`) verifies **84 distinct requirements** across 9 test modules:
 - `api/__tests__/utils.test.ts` (10 tests): Hardened CORS allowlist, preview origin reflection, exact VERCEL_URL isolation, untrusted vercel subdomain rejection, `Vary: Origin`, method guards (405 + Allow), query sanitization, and environment variable safety.
 - `api/__tests__/aqi.test.ts` (12 tests): Serverless AQI endpoint, preflight OPTIONS, city sanitization, direct lat/lon bypass, and error propagation.
 - `api/__tests__/suggest.test.ts` (10 tests): Geocoding autocomplete, short query suppression, rate limit edge caching, and fallback Indian locations.
-- `api/__tests__/plan.test.ts` (11 tests): Gemini 3.5 Flash-Lite serverless handler, minimal thinking level, payload size limits, category validation, malformed household/window/peak validation, and fallback synthesis.
+- `api/__tests__/plan.test.ts` (12 tests): Gemini 3.5 Flash-Lite serverless handler, minimal thinking level, payload size limits, category validation, malformed household/window/peak validation, upstream retry on 503, and fallback synthesis.
 - `src/features/aqi/__tests__/aqi.test.ts` (17 tests): CPCB breakpoints, boundary edge cases (PM2.5 = 30, 60, 90, 120, 250, 380; PM10 = 50, 100, 250, 350, 430, 510), Delhi AQI 312 Very Poor verification, dominant pollutant evaluation, 6-band color-text pairing, 2-hour best window detection, peak smog hour detection, coordinate handling, suggestion label prefix matching, shouldFetchSuggestions typing guards, sequence concurrency check, and conservative live fallback.
 - `src/features/aqi/__tests__/cache.test.ts` (4 tests): In-memory 5-minute session caching and normalized city key deduplication.
-- `src/features/plan/__tests__/plan.test.ts` (7 tests): Deterministic fallback generation for vulnerable households, outdoor window scheduling, child/asthma protections, Zod schema validation, and plain-words impact rules.
+- `src/features/plan/__tests__/plan.test.ts` (9 tests): Deterministic fallback generation for vulnerable households, outdoor window scheduling, child/asthma protections, Zod schema validation, category casing normalization, fallback ID generation, and plain-words impact rules.
 - `src/features/plan/__tests__/impact.test.ts` (5 tests): Exposure score idempotency ($f(x) = f(x)$), transparent rule traces, `"Comfort, not exposure"` fallback, one-sentence headline generation, and methodology disclosure.
 - `src/components/__tests__/ErrorBoundary.test.ts` (5 tests): Class error boundaries, state derivation, graceful fallback UI, and manual retry handlers.
 

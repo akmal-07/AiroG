@@ -169,7 +169,7 @@ In AiroG, we implemented aggressive architectural code splitting:
 
 ## 7. Testing & Verification
 
-AiroG includes a full Vitest test suite (`npm test`) covering **81 automated unit tests across 9 test suites**:
+AiroG includes a full Vitest test suite (`npm test`) covering **84 automated unit tests across 9 test suites**:
 - Serverless API handlers (`api/_utils.ts`, `api/aqi.ts`, `api/suggest.ts`, `api/plan.ts`) with origin allowlisting and minimal thinking level.
 - CPCB piecewise interpolation accuracy (including the Delhi AQI 312 benchmark).
 - Diurnal forecast window detection and in-memory cache TTL.

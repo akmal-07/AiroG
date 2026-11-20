@@ -58,6 +58,45 @@ describe('Deterministic Impact Model', () => {
     const windowImpact = computeItemImpact(sampleItems[1]!, 'Very Poor', mockHousehold);
     expect(windowImpact.level).toBe('High');
     expect(windowImpact.ruleTrace).toContain('ambient pollutant concentration');
+
+    // Verify distinct, non-repeating impact copy across diverse plan actions
+    const n95Mask = computeItemImpact(
+      { id: 'item-m', title: 'Wear N95 Mask Outdoors', detail: 'Ensure tight seal over nose', impact: '', category: 'routines' },
+      'Very Poor',
+      mockHousehold
+    );
+    const asthmaInhaler = computeItemImpact(
+      { id: 'item-a', title: 'Keep Asthma Inhalers Accessible', detail: 'Carry rescue spacer', impact: '', category: 'routines' },
+      'Very Poor',
+      { ...mockHousehold, hasAsthma: true }
+    );
+    expect(n95Mask.line).not.toBe(asthmaInhaler.line);
+    expect(n95Mask.line).toContain('N95');
+    expect(asthmaInhaler.line).toContain('inhaler');
+
+    const windowSeal = computeItemImpact(
+      { id: 'item-w', title: 'Keep Windows Tightly Shut', detail: 'Prevent ingress', impact: '', category: 'indoor hacks' },
+      'Very Poor',
+      mockHousehold
+    );
+    const draftGuard = computeItemImpact(
+      { id: 'item-d', title: 'Place Towel Under Door Draft', detail: 'Block ground gaps', impact: '', category: 'indoor hacks' },
+      'Very Poor',
+      mockHousehold
+    );
+    expect(windowSeal.line).not.toBe(draftGuard.line);
+
+    const wetMop = computeItemImpact(
+      { id: 'item-mp', title: 'Wet Mop Floors Twice Daily', detail: 'Trap settled particles', impact: '', category: 'indoor hacks' },
+      'Very Poor',
+      mockHousehold
+    );
+    const dampCloth = computeItemImpact(
+      { id: 'item-dc', title: 'Wipe Sills with Damp Microfiber Cloth', detail: 'Lift surface film', impact: '', category: 'indoor hacks' },
+      'Very Poor',
+      mockHousehold
+    );
+    expect(wetMop.line).not.toBe(dampCloth.line);
   });
 
   it('tags non-particulate actions strictly as Comfort without inventing exposure reductions', () => {
