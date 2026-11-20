@@ -34,9 +34,12 @@ export const CitySearchAutocomplete: React.FC<CitySearchAutocompleteProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const isUserTypingRef = useRef(false);
 
-  // Debounced search with AbortController (250ms)
+  // Debounced search with AbortController (250ms), guarded by user typing state
   useEffect(() => {
+    if (!isUserTypingRef.current) return;
+
     const trimmed = value.trim();
     if (trimmed.length < 2) {
       setSuggestions([]);
@@ -92,9 +95,12 @@ export const CitySearchAutocomplete: React.FC<CitySearchAutocompleteProps> = ({
   }, []);
 
   const handleSelect = useCallback((item: SuggestionItem) => {
-    onChange(item.label);
+    isUserTypingRef.current = false;
+    if (abortControllerRef.current) abortControllerRef.current.abort();
+    setSuggestions([]);
     setIsOpen(false);
     setActiveIndex(-1);
+    onChange(item.label);
     onSelect(item.label);
   }, [onChange, onSelect]);
 
@@ -118,11 +124,13 @@ export const CitySearchAutocomplete: React.FC<CitySearchAutocompleteProps> = ({
       if (activeIndex >= 0 && suggestions[activeIndex]) {
         handleSelect(suggestions[activeIndex]);
       } else {
+        isUserTypingRef.current = false;
         setIsOpen(false);
         onSubmit();
       }
     } else if (e.key === 'Escape') {
       e.preventDefault();
+      isUserTypingRef.current = false;
       setIsOpen(false);
       setActiveIndex(-1);
     }
@@ -171,7 +179,10 @@ export const CitySearchAutocomplete: React.FC<CitySearchAutocompleteProps> = ({
           maxLength={60}
           disabled={disabled}
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => {
+            isUserTypingRef.current = true;
+            onChange(e.target.value);
+          }}
           onFocus={() => { if (suggestions.length > 0) setIsOpen(true); }}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
