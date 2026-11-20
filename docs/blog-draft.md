@@ -31,7 +31,7 @@ If you prompt an LLM:
 The model will confidently hallucinate an exact number: *"It reduces exposure by 43.7%."* That number looks convincing, but it has no empirical or mathematical basis.
 
 In AiroG, we established a strict architectural boundary:
-- **Google Gemini 2.5 Flash drafts the action items only:** Suggesting intuitive routines, indoor hacks, and greener alternatives in plain words under strict Zod validation schemas.
+- **Google Gemini 3.5 Flash-Lite drafts the action items only:** Suggesting intuitive routines, indoor hacks, and greener alternatives in plain words under strict Zod validation schemas.
 - **Deterministic TypeScript models calculate every single number:** The CPCB AQI band, the day's best outdoor window, the peak smog inversion hour, the 0–100 daily exposure score, and individual qualitative impact tiers (`High`, `Medium`, `Low`, `Comfort`).
 
 The AI is never allowed to invent a number, and unvalidated AI output is never rendered on screen.
@@ -118,7 +118,7 @@ When Gemini drafts the daily routine, any outdoor errand (groceries, commuting, 
 
 ## 4. Zod Validation & Deterministic Rule Fallbacks
 
-A serverless proxy (`/api/plan`) invokes Google Gemini 2.5 Flash with strict formatting instructions. But LLMs can hallucinate malformed JSON or drop categories. 
+A serverless proxy (`/api/plan`) invokes Google Gemini 3.5 Flash-Lite with strict formatting instructions. But LLMs can hallucinate malformed JSON or drop categories. 
 
 AiroG uses a 3-tier safety net:
 1. **Zod Schema Gate:**
@@ -170,7 +170,7 @@ In AiroG, we implemented aggressive architectural code splitting:
 ## 7. Testing & Verification
 
 AiroG includes a full Vitest test suite (`npm test`) covering **81 automated unit tests across 9 test suites**:
-- Serverless API handlers (`api/_utils.ts`, `api/aqi.ts`, `api/suggest.ts`, `api/plan.ts`) with origin allowlisting and zero-thinking budget.
+- Serverless API handlers (`api/_utils.ts`, `api/aqi.ts`, `api/suggest.ts`, `api/plan.ts`) with origin allowlisting and minimal thinking level.
 - CPCB piecewise interpolation accuracy (including the Delhi AQI 312 benchmark).
 - Diurnal forecast window detection and in-memory cache TTL.
 - Zod schema validation boundaries and deterministic rule fallback generation.

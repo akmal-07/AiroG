@@ -89,7 +89,7 @@ function isValidPeak(p: unknown): p is PlanApiRequestBody['peak'] {
 
 /**
  * Serverless API handler: /api/plan
- * Generates personalized daily action plan using Google Gemini 2.5 Flash with strict zero-thinking budget.
+ * Generates personalized daily action plan using Google Gemini 3.5 Flash-Lite with minimal thinking level.
  */
 export default async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
   if (!ensureMethod(req, res, ['POST'])) {
@@ -157,7 +157,7 @@ REQUIREMENTS:
   ]
 }`;
 
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`;
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${encodeURIComponent(apiKey)}`;
 
     const geminiRes = await fetchWithTimeout(
       geminiUrl,
@@ -167,10 +167,9 @@ REQUIREMENTS:
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: {
-            temperature: 0.2,
             responseMimeType: 'application/json',
             thinkingConfig: {
-              thinkingBudget: 0,
+              thinkingLevel: 'minimal',
             },
           },
         }),

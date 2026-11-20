@@ -6,7 +6,7 @@
 
 ## 1. Prompt Engineering Strategy
 
-In AiroG, the Large Language Model (Google Gemini 2.5 Flash) is treated as an **untrusted creative drafting tool**. While LLMs excel at generating contextually varied, empathetic domestic advice, they are prone to inventing quantitative impact metrics (e.g., claiming "this tea cleanses 34% of PM2.5 from lungs").
+In AiroG, the Large Language Model (Google Gemini 3.5 Flash-Lite) is treated as an **untrusted creative drafting tool**. While LLMs excel at generating contextually varied, empathetic domestic advice, they are prone to inventing quantitative impact metrics (e.g., claiming "this tea cleanses 34% of PM2.5 from lungs").
 
 To maintain absolute scientific and medical integrity:
 1. **The prompt explicitly forbids numbers and percentages in the impact field.** All numerical calculations (AQI sub-indices, 0–100 exposure scores, reduction points) are computed deterministically in TypeScript.
@@ -15,7 +15,7 @@ To maintain absolute scientific and medical integrity:
 
 ---
 
-## 2. Gemini 2.5 Flash System Prompt (`api/plan.ts`)
+## 2. Gemini 3.5 Flash-Lite System Prompt (`api/plan.ts`)
 
 ```text
 You are AiroG, a specialized urban air quality advisor helping an Indian family navigate winter smog.
@@ -53,8 +53,8 @@ REQUIREMENTS:
 ```
 
 ### Generation Configuration:
-- **Model:** `gemini-2.5-flash`
-- **Temperature:** `0.2` (low temperature for deterministic adherence to rules)
+- **Model:** `gemini-3.5-flash-lite`
+- **Thinking Config:** `{ thinkingLevel: "minimal" }` (minimizes reasoning latency)
 - **Response MIME Type:** `application/json`
 
 ---

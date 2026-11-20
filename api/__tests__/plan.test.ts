@@ -144,16 +144,21 @@ describe('Serverless Handler: /api/plan', () => {
     expect(getResult3().statusCode).toBe(400);
   });
 
-  it('sends thinkingConfig: { thinkingBudget: 0 } to Gemini to eliminate reasoning latency', async () => {
+  it('sends thinkingConfig: { thinkingLevel: "minimal" } to Gemini 3.5 Flash-Lite to eliminate reasoning latency', async () => {
     process.env['GEMINI_API_KEY'] = 'test-gemini-key';
 
-    const captured: { requestBody: { generationConfig?: Record<string, unknown> } | null } = {
+    const captured: {
+      url: string | null;
+      requestBody: { generationConfig?: Record<string, unknown> } | null;
+    } = {
+      url: null,
       requestBody: null,
     };
 
     vi.stubGlobal(
       'fetch',
-      vi.fn().mockImplementation((_url: string, init?: RequestInit) => {
+      vi.fn().mockImplementation((url: string, init?: RequestInit) => {
+        captured.url = url;
         if (init?.body) {
           captured.requestBody = JSON.parse(init.body as string) as {
             generationConfig?: Record<string, unknown>;
@@ -195,14 +200,16 @@ describe('Serverless Handler: /api/plan', () => {
     const result = getResult();
 
     expect(result.statusCode).toBe(200);
+    expect(captured.url).toContain('/models/gemini-3.5-flash-lite:generateContent');
     expect(captured.requestBody).not.toBeNull();
     expect(captured.requestBody?.generationConfig).toEqual({
-      temperature: 0.2,
       responseMimeType: 'application/json',
       thinkingConfig: {
-        thinkingBudget: 0,
+        thinkingLevel: 'minimal',
       },
     });
+    expect(captured.requestBody?.generationConfig).not.toHaveProperty('temperature');
+    expect(captured.requestBody?.generationConfig).not.toHaveProperty('thinkingBudget');
   });
 
   it('returns structured JSON items and no-store Cache-Control on success', async () => {
