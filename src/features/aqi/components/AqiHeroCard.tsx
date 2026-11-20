@@ -50,7 +50,7 @@ export const AqiHeroCard: React.FC<AqiHeroCardProps> = ({ aqiResult }) => {
               {isDemo ? 'Demo: Curated CPCB Dataset' : 'Live: OpenWeatherMap \u00B7 CPCB NAQI'}
             </span>
             <span aria-hidden="true">&bull;</span>
-            <span>Updated {formattedTime}</span>
+            <span>Updated{' '}{formattedTime}</span>
           </p>
         </div>
 
@@ -105,7 +105,7 @@ export const AqiHeroCard: React.FC<AqiHeroCardProps> = ({ aqiResult }) => {
             {bestWindow.windowText}
           </div>
           <p className="text-xs text-label-secondary leading-relaxed">
-            Lowest-AQI stretch (~{bestWindow.averageAqi} AQI). Safer for errands.
+            Lowest-AQI stretch (~{bestWindow.averageAqi}{' '}AQI). Safer for errands.
           </p>
         </div>
 
@@ -116,10 +116,10 @@ export const AqiHeroCard: React.FC<AqiHeroCardProps> = ({ aqiResult }) => {
             <span>Peak Smog Hour</span>
           </div>
           <div className="my-3 text-lg font-semibold tracking-tight text-label-primary">
-            Around {bestWindow.peakHour}
+            Around{' '}{bestWindow.peakHour}
           </div>
           <p className="text-xs text-label-secondary leading-relaxed">
-            Highest pollution peak (~{bestWindow.peakAqi} AQI). Keep windows closed.
+            Highest pollution peak (~{bestWindow.peakAqi}{' '}AQI). Keep windows closed.
           </p>
         </div>
       </div>

@@ -119,8 +119,10 @@ AiroG/
 ├── tsconfig.json                    # includes "@/*": ["src/*"] path alias
 ├── vite.config.ts                   # includes "@" resolve alias
 ├── api/                             # Vercel serverless proxies (env secrets only)
+│   ├── _utils.ts                    # DRY CORS allowlisting, error responses, env & timeout guards
 │   ├── aqi.ts                       # OpenWeather geocode + current/forecast
-│   └── plan.ts                      # Gemini 2.5 Flash strict JSON draft
+│   ├── suggest.ts                   # Geocoding autocomplete proxy
+│   └── plan.ts                      # Gemini 2.5 Flash strict JSON draft & runtime guards
 ├── docs/                            # Judging & Dual Submission assets
 │   ├── ARCHITECTURE.md              # Data flow, CPCB math, deterministic vs AI split
 │   ├── PROMPTS.md                   # System prompts & Zod schema rules
@@ -128,15 +130,18 @@ AiroG/
 │   └── linkedin-draft.md            # Build-in-public post
 └── src/
     ├── app/                         # App shell & global styles
-    │   ├── App.tsx
-    │   └── index.css
+    │   ├── App.tsx                  # Modular root shell (< 120 lines)
+    │   ├── index.css
+    │   └── hooks/
+    │       └── useAirQualityDashboard.ts # Dashboard state, sequence guard & AbortControllers
     ├── components/                  # Shared global layout components
     │   ├── Header.tsx
-    │   └── Footer.tsx
+    │   ├── Footer.tsx
+    │   └── ErrorBoundary.tsx        # React component crash isolation
     ├── features/                    # Feature-first modular domain architecture
     │   ├── aqi/                     # CPCB calculation & real-time monitoring
     │   │   ├── api/fetchAqi.ts      # 5-minute session cache + OpenWeather proxy
-    │   │   ├── components/          # AqiBadge, AqiLegend, AqiHeroCard
+    │   │   ├── components/          # AqiBadge, AqiLegend, AqiHeroCard, CitySearchBar, AqiStatusBanner, CitySearchAutocomplete
     │   │   ├── data/demo.ts         # 10-city curated Indian fallback dataset
     │   │   ├── utils/aqi.ts         # Deterministic CPCB NAQI math
     │   │   ├── utils/forecastWindow.ts # Diurnal best window & peak smog detection
@@ -145,11 +150,14 @@ AiroG/
     │   ├── household/               # Household demographics & local persistence
     │   │   ├── components/          # HouseholdForm (steppers & toggles)
     │   │   └── utils/storage.ts     # Versioned localStorage ('airog_v1')
-    │   └── plan/                    # AI plan generation & deterministic impact
-    │       ├── api/plan.ts          # Gemini fetch, Zod schemas & rule fallback
-    │       ├── components/          # PlanSection, PlanCard, ImpactBar
-    │       ├── utils/impact.ts      # 0–100 exposure score & rule traces
-    │       └── __tests__/           # Plan & impact unit tests
+    │   ├── plan/                    # AI plan generation & deterministic impact
+    │   │   ├── api/plan.ts          # Gemini fetch, Zod schemas & rule fallback
+    │   │   ├── components/          # PlanSection, PlanCard, ImpactBar
+    │   │   ├── utils/impact.ts      # 0–100 exposure score & rule traces
+    │   │   └── __tests__/           # Plan & impact unit tests
+    │   └── theme/                   # Theme toggle & dark mode persistence
+    │       ├── components/ThemeToggle.tsx
+    │       └── hooks/useTheme.ts
     ├── types/                       # Shared domain TypeScript declarations
     │   └── index.ts
     └── main.tsx                     # React entry point
@@ -166,10 +174,10 @@ To achieve a 95+ Efficiency rating, AiroG employs aggressive code splitting and 
 
 | Metric | Before Optimization | After Optimization | Improvement |
 | :--- | :--- | :--- | :--- |
-| **Initial Critical JS (`index-*.js`)** | **279.98 kB** (84.81 kB gzip) | **182.73 kB** (57.65 kB gzip) | **-97.25 kB (-34.7%) reduction (under 183 kB)** |
-| **Lazy Plan Engine (`plan-*.js`)** | *bundled in main* | **87.10 kB** (26.02 kB gzip) | Loaded dynamically on calculation |
+| **Initial Critical JS (`index-*.js`)** | **279.98 kB** (84.81 kB gzip) | **183.04 kB** (57.74 kB gzip) | **-96.94 kB (-34.6%) reduction (under 183.5 kB)** |
+| **Lazy Plan Engine (`plan-*.js`)** | *bundled in main* | **87.46 kB** (26.09 kB gzip) | Loaded dynamically on calculation |
 | **Lazy Household Form (`HouseholdForm-*.js`)** | *bundled in main* | **9.25 kB** (1.69 kB gzip) | Code-split below the fold |
-| **Lazy Plan UI (`PlanSection-*.js`)** | *bundled in main* | **14.85 kB** (4.48 kB gzip) | Code-split below the fold |
+| **Lazy Plan UI (`PlanSection-*.js`)** | *bundled in main* | **14.86 kB** (4.48 kB gzip) | Code-split below the fold |
 | **Lazy AQI Legend (`AqiLegend-*.js`)** | *bundled in main* | **2.27 kB** (0.93 kB gzip) | Code-split below the fold |
 | **CSS Bundle (`index-*.css`)** | 22.25 kB (4.74 kB gzip) | **29.24 kB** (5.87 kB gzip) | Purged utility CSS + Apple themes |
 | **Session Cache** | None | 5-minute in-memory cache | Prevents duplicate city refetches |
@@ -187,8 +195,8 @@ To achieve a 95+ Efficiency rating, AiroG employs aggressive code splitting and 
   - **Reduced Motion Support:** Global `@media (prefers-reduced-motion: reduce)` removes animations for vestibular-sensitive users.
   - **Full Keyboard Navigation:** Across all interactive elements with visible high-contrast focus rings (`outline: 2px solid var(--accent-blue)`).
   - **Dual Color-Text Pairing:** AQI bands and impact levels are never conveyed by color alone.
-- **Security & Quality (100/100):**
-  - **Hardened CORS:** Strict origin allowlist (`https://airog.vercel.app`, `localhost:5173`, `localhost:3000`) with `Vary: Origin`—zero wildcard `*` headers.
+- **Security & Hardening:**
+  - **Hardened CORS:** Strict origin allowlist (`https://airog.vercel.app`, exact preview deployment origin `https://${process.env.VERCEL_URL}`, and `localhost:5173`/`localhost:3000` in development) with `Vary: Origin`—zero wildcard `*` headers.
   - **Zero Secret Leakage:** Neither `GEMINI_API_KEY` nor `OPENWEATHER_API_KEY` is ever exposed to the client bundle.
   - **Zero instances of `dangerouslySetInnerHTML`** and **zero occurrences of TypeScript `any`**.
   - **Defensive Error Boundaries:** Graceful React `ErrorBoundary` wrappers around lazy chunks with fallback UIs and retry controls.
@@ -243,7 +251,7 @@ cp .env.example .env
 # Start local development server
 npm run dev
 
-# Run Vitest unit test suite (80 tests across 9 files)
+# Run Vitest unit test suite (81 tests across 9 files)
 npm test
 
 # Run strict TypeScript type-checking across both src/ and api/
@@ -257,11 +265,11 @@ npm run build
 
 ## 8. Test Suite Summary
 
-The automated Vitest test suite (`npm test`) verifies **80 distinct requirements** across 9 test modules:
+The automated Vitest test suite (`npm test`) verifies **81 distinct requirements** across 9 test modules:
 - `api/__tests__/utils.test.ts` (10 tests): Hardened CORS allowlist, preview origin reflection, exact VERCEL_URL isolation, untrusted vercel subdomain rejection, `Vary: Origin`, method guards (405 + Allow), query sanitization, and environment variable safety.
 - `api/__tests__/aqi.test.ts` (12 tests): Serverless AQI endpoint, preflight OPTIONS, city sanitization, direct lat/lon bypass, and error propagation.
 - `api/__tests__/suggest.test.ts` (10 tests): Geocoding autocomplete, short query suppression, rate limit edge caching, and fallback Indian locations.
-- `api/__tests__/plan.test.ts` (10 tests): Gemini 2.5 Flash serverless handler, strict thinking budget (0), payload size limits, category validation, and fallback synthesis.
+- `api/__tests__/plan.test.ts` (11 tests): Gemini 2.5 Flash serverless handler, strict thinking budget (0), payload size limits, category validation, malformed household/window/peak validation, and fallback synthesis.
 - `src/features/aqi/__tests__/aqi.test.ts` (17 tests): CPCB breakpoints, boundary edge cases (PM2.5 = 30, 60, 90, 120, 250, 380; PM10 = 50, 100, 250, 350, 430, 510), Delhi AQI 312 Very Poor verification, dominant pollutant evaluation, 6-band color-text pairing, 2-hour best window detection, peak smog hour detection, coordinate handling, suggestion label prefix matching, shouldFetchSuggestions typing guards, sequence concurrency check, and conservative live fallback.
 - `src/features/aqi/__tests__/cache.test.ts` (4 tests): In-memory 5-minute session caching and normalized city key deduplication.
 - `src/features/plan/__tests__/plan.test.ts` (7 tests): Deterministic fallback generation for vulnerable households, outdoor window scheduling, child/asthma protections, Zod schema validation, and plain-words impact rules.

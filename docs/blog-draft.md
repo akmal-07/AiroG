@@ -150,7 +150,7 @@ And every summary includes our transparent methodology disclosure:
 
 ---
 
-## 6. Optimization: Slashing Bundle Size by 34.2%
+## 6. Optimization: Slashing Initial Bundle to 183.0 kB (-34.6% Reduction)
 
 In Challenge 05, our bundle efficiency score was 80/100 because heavy dependencies were compiled directly into the root bundle.
 
@@ -161,15 +161,15 @@ In AiroG, we implemented aggressive architectural code splitting:
 
 ### The Measurements:
 - **Before Optimization:** `index-*.js` = **279.98 kB** (84.81 kB gzip)
-- **After Optimization:** `index-*.js` = **182.73 kB** (57.65 kB gzip)
-- **Net Reduction:** **-97.25 kB (-34.7%)** (comfortably under the 183 kB budget)
-- **Lazy Plan Engine Chunk:** 87.10 kB (loaded asynchronously)
+- **After Optimization:** `index-*.js` = **183.04 kB** (57.74 kB gzip)
+- **Net Reduction:** **-96.94 kB (-34.6%)** (comfortably under the 183.5 kB budget)
+- **Lazy Plan Engine Chunk:** 87.46 kB (loaded asynchronously)
 
 ---
 
 ## 7. Testing & Verification
 
-AiroG includes a full Vitest test suite (`npm test`) covering **80 automated unit tests across 9 test suites**:
+AiroG includes a full Vitest test suite (`npm test`) covering **81 automated unit tests across 9 test suites**:
 - Serverless API handlers (`api/_utils.ts`, `api/aqi.ts`, `api/suggest.ts`, `api/plan.ts`) with origin allowlisting and zero-thinking budget.
 - CPCB piecewise interpolation accuracy (including the Delhi AQI 312 benchmark).
 - Diurnal forecast window detection and in-memory cache TTL.

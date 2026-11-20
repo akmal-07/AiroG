@@ -22,7 +22,7 @@ export function computeItemImpact(
   const text = `${item.title} ${item.detail} ${item.category}`.toLowerCase();
   const isHighSmog = category === 'Very Poor' || category === 'Severe' || category === 'Poor';
 
-  // 1. HEPA Air Filtration
+  // 1. HEPA Air Filtration & Clean Sanctuary
   if (/purifier|hepa|filtration|clean\s*room/.test(text)) {
     if (household.hasPurifier) {
       return {
@@ -40,8 +40,30 @@ export function computeItemImpact(
     };
   }
 
-  // 2. Outdoor Window Alignment
-  if (/outdoor|window|errand|shift|timing|exercise|schedule/.test(text) && !/clean\s*room|filter/.test(text)) {
+  // 2. Vulnerable Members Protection (Children & Elders)
+  if (/children|child|kid|elder|vulnerable|recess|sports/.test(text)) {
+    return {
+      level: isHighSmog ? 'High' : 'Medium',
+      line: isHighSmog
+        ? 'Shields developing lungs and sensitive cardiovascular systems from acute roadway and smog peaks.'
+        : 'Reduces cumulative particulate exposure during sensitive developmental and cardiovascular exertion.',
+      ruleTrace: 'Rule: Exposure avoidance for vulnerable age groups',
+    };
+  }
+
+  // 3. Window Infiltration & Ventilation
+  if (/seal|shut|close|draft|ventilat/.test(text)) {
+    return {
+      level: isHighSmog ? 'High' : 'Medium',
+      line: isHighSmog
+        ? 'Keeping windows sealed tightly blocks heavy morning and evening vehicular inversion plumes.'
+        : 'Controlled ventilation refreshes indoor oxygen while keeping particle ingress manageable.',
+      ruleTrace: 'Rule: Physical boundary ventilation management',
+    };
+  }
+
+  // 4. Outdoor Window Alignment
+  if (/outdoor|errand|chore|grocery|best\s*window/.test(text)) {
     if (isHighSmog) {
       return {
         level: 'High',
@@ -53,17 +75,6 @@ export function computeItemImpact(
       level: 'Medium',
       line: 'Minimizes inhaled particulate volume by timing outdoor activities during the day’s cleanest hours.',
       ruleTrace: 'Rule: Midday ambient particulate avoidance',
-    };
-  }
-
-  // 3. Vulnerable Members Protection (Children & Elders)
-  if (/children|child|kid|elder|vulnerable|recess|sports/.test(text)) {
-    return {
-      level: isHighSmog ? 'High' : 'Medium',
-      line: isHighSmog
-        ? 'Shields developing lungs and sensitive cardiovascular systems from acute roadway and smog peaks.'
-        : 'Reduces cumulative particulate exposure during sensitive developmental and cardiovascular exertion.',
-      ruleTrace: 'Rule: Exposure avoidance for vulnerable age groups',
     };
   }
 
@@ -85,18 +96,7 @@ export function computeItemImpact(
     };
   }
 
-  // 6. Window Infiltration & Ventilation
-  if (/seal|shut|close|ventilat/.test(text)) {
-    return {
-      level: isHighSmog ? 'High' : 'Medium',
-      line: isHighSmog
-        ? 'Keeping windows sealed tightly blocks heavy morning and evening vehicular inversion plumes.'
-        : 'Controlled ventilation refreshes indoor oxygen while keeping particle ingress manageable.',
-      ruleTrace: 'Rule: Physical boundary ventilation management',
-    };
-  }
-
-  // 7. Low-Emission Transit & Metro
+  // 6. Low-Emission Transit & Metro
   if (/metro|transit|bus|carpool|vehicle|commute/.test(text)) {
     return {
       level: 'Medium',
@@ -105,7 +105,7 @@ export function computeItemImpact(
     };
   }
 
-  // 8. Elimination of Domestic Smoke & Combustion
+  // 7. Elimination of Domestic Smoke & Combustion
   if (/burn|smoke|incense|agarbatti|fire|waste/.test(text)) {
     return {
       level: 'High',

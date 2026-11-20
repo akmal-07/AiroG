@@ -37,7 +37,7 @@ export const AqiStatusBanner: React.FC<AqiStatusBannerProps> = ({
           </svg>
         </div>
         <p className="mt-4 text-sm font-medium text-label-primary">
-          Fetching CPCB air quality and hourly forecast for {cityInput}...
+          Fetching CPCB air quality and hourly forecast for{' '}{cityInput}...
         </p>
       </section>
     );

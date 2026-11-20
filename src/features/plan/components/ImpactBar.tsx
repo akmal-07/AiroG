@@ -149,7 +149,7 @@ export const ImpactBar: React.FC<ImpactBarProps> = ({
               <span className="text-xs font-semibold text-label-primary">Best Window</span>
             </div>
             <span className="text-xs font-semibold tabular-nums text-label-primary">
-              {bestWindow.windowText} (~{bestWindow.averageAqi} AQI)
+              {bestWindow.windowText}{' '}(~{bestWindow.averageAqi}{' '}AQI)
             </span>
           </div>
 
@@ -159,7 +159,7 @@ export const ImpactBar: React.FC<ImpactBarProps> = ({
               <span className="text-xs font-semibold text-label-primary">Peak Smog</span>
             </div>
             <span className="text-xs font-semibold tabular-nums text-label-primary">
-              Around {bestWindow.peakHour} (~{bestWindow.peakAqi} AQI)
+              Around{' '}{bestWindow.peakHour}{' '}(~{bestWindow.peakAqi}{' '}AQI)
             </span>
           </div>
         </div>

@@ -65,7 +65,7 @@ export const PlanSectionComponent: React.FC<PlanSectionProps> = ({
             )}
           </div>
           <p className="text-xs sm:text-sm text-label-secondary mt-1">
-            Actions tailored to {activeCity}'s smog conditions and your household profile.
+            Actions tailored to{' '}{activeCity}'s smog conditions and your household profile.
           </p>
         </div>
 

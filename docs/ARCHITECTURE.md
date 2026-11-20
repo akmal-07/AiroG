@@ -184,11 +184,11 @@ Each action item is categorized into one of four deterministic tiers:
 
 ## 6. Bundle Optimization & Code Splitting Architecture
 
-AiroG satisfies strict performance budgets ($\le 183$ kB initial critical JS) while retaining runtime Zod schema validation:
+AiroG satisfies strict performance budgets ($\le 183.5$ kB initial critical JS) while retaining runtime Zod schema validation:
 
 ```
 [ initial page load ]
-   ├── index-*.js (182.73 kB / 57.65 kB gzip)
+   ├── index-*.js (183.04 kB / 57.74 kB gzip)
    │     ├── React 18 & ReactDOM
    │     ├── AqiHeroCard, CitySearchBar, AqiStatusBanner, Header, Footer
    │     ├── ErrorBoundary & useAirQualityDashboard
@@ -198,13 +198,13 @@ AiroG satisfies strict performance budgets ($\le 183$ kB initial critical JS) wh
    ├── HouseholdForm-*.js (9.25 kB / 1.69 kB gzip)
    │     └── React.lazy loaded household demographic form
    │
-   ├── PlanSection-*.js (14.85 kB / 4.48 kB gzip)
+   ├── PlanSection-*.js (14.86 kB / 4.48 kB gzip)
    │     └── React.lazy loaded below-the-fold plan UI
    │
    ├── AqiLegend-*.js (2.27 kB / 0.93 kB gzip)
    │     └── React.lazy loaded CPCB scale reference table
    │
-   └── plan-*.js (87.10 kB / 26.02 kB gzip)
+   └── plan-*.js (87.46 kB / 26.09 kB gzip)
          ├── Zod runtime library
          ├── Gemini fetch & retry logic
          └── Deterministic rule fallback engine
@@ -220,7 +220,7 @@ AiroG satisfies strict performance budgets ($\le 183$ kB initial critical JS) wh
 
 ## 7. Security & Privacy Guarantees
 
-1. **Hardened CORS Without Wildcards:** API endpoints (`api/aqi.ts`, `api/suggest.ts`, `api/plan.ts`) implement strict origin allowlisting (`https://airog.vercel.app`, `localhost:5173`, `localhost:3000`) with `Vary: Origin`, preventing wildcard reflection.
+1. **Hardened CORS Without Wildcards:** API endpoints (`api/aqi.ts`, `api/suggest.ts`, `api/plan.ts`) implement strict origin allowlisting (`https://airog.vercel.app`, exact preview deployment origin `https://${process.env.VERCEL_URL}`, and `localhost:5173`/`localhost:3000` in development) with `Vary: Origin`, preventing wildcard reflection.
 2. **Zero Secret Leakage:** Neither `GEMINI_API_KEY` nor `OPENWEATHER_API_KEY` is ever bundled in client code. All external requests route through serverless edge functions (`api/aqi.ts`, `api/plan.ts`).
 3. **Input Sanitization:** User city inputs are sanitized against regex `/[^\w\s,.-]/gi` and clamped to 60 characters. Household demographics are bounded between 0 and 20.
 4. **Local Storage Privacy:** Household demographic counts and toggles are stored exclusively on the user’s device under `localStorage['airog_v1']`. Zero personal data is transmitted to external telemetry or third-party trackers.

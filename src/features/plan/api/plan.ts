@@ -154,13 +154,15 @@ export function generateRuleBasedPlan(req: PlanRequestBody): DayPlan {
  * Retries once if AI output is malformed or invalid.
  * Falls back to deterministic rule-based plan if proxy is unavailable or validation fails twice.
  */
-export async function fetchDayPlan(req: PlanRequestBody): Promise<DayPlan> {
+export async function fetchDayPlan(req: PlanRequestBody, signal?: AbortSignal): Promise<DayPlan> {
   const tryFetchFromApi = async (): Promise<PlanItem[] | null> => {
+    if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
     try {
       const res = await fetch('/api/plan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(req),
+        signal,
       });
 
       if (!res.ok) {
@@ -175,17 +177,31 @@ export async function fetchDayPlan(req: PlanRequestBody): Promise<DayPlan> {
       }
 
       return null;
-    } catch {
+    } catch (err: unknown) {
+      if (err instanceof Error && err.name === 'AbortError') throw err;
       return null;
     }
   };
 
   // Attempt 1
-  let items = await tryFetchFromApi();
+  let items: PlanItem[] | null = null;
+  try {
+    items = await tryFetchFromApi();
+  } catch (err: unknown) {
+    if (err instanceof Error && err.name === 'AbortError') throw err;
+  }
 
   // Retry once if failed or invalid shape
-  if (!items) {
-    items = await tryFetchFromApi();
+  if (!items && !signal?.aborted) {
+    try {
+      items = await tryFetchFromApi();
+    } catch (err: unknown) {
+      if (err instanceof Error && err.name === 'AbortError') throw err;
+    }
+  }
+
+  if (signal?.aborted) {
+    throw new DOMException('Aborted', 'AbortError');
   }
 
   // If valid AI items received after retry

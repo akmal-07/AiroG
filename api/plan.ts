@@ -57,6 +57,36 @@ interface GeminiResponse {
   };
 }
 
+function isValidHousehold(h: unknown): h is PlanApiRequestBody['household'] {
+  if (!h || typeof h !== 'object') return false;
+  const obj = h as Record<string, unknown>;
+  return (
+    typeof obj.adults === 'number' && Number.isFinite(obj.adults) && obj.adults >= 0 &&
+    typeof obj.children === 'number' && Number.isFinite(obj.children) && obj.children >= 0 &&
+    typeof obj.elders === 'number' && Number.isFinite(obj.elders) && obj.elders >= 0 &&
+    typeof obj.hasAsthma === 'boolean' &&
+    typeof obj.hasPurifier === 'boolean'
+  );
+}
+
+function isValidBestWindow(w: unknown): w is PlanApiRequestBody['bestWindow'] {
+  if (!w || typeof w !== 'object') return false;
+  const obj = w as Record<string, unknown>;
+  return (
+    typeof obj.windowText === 'string' && obj.windowText.trim().length > 0 &&
+    typeof obj.averageAqi === 'number' && Number.isFinite(obj.averageAqi)
+  );
+}
+
+function isValidPeak(p: unknown): p is PlanApiRequestBody['peak'] {
+  if (!p || typeof p !== 'object') return false;
+  const obj = p as Record<string, unknown>;
+  return (
+    typeof obj.hour === 'string' && obj.hour.trim().length > 0 &&
+    typeof obj.aqi === 'number' && Number.isFinite(obj.aqi)
+  );
+}
+
 /**
  * Serverless API handler: /api/plan
  * Generates personalized daily action plan using Google Gemini 2.5 Flash with strict zero-thinking budget.
@@ -77,8 +107,13 @@ export default async function handler(req: ApiRequest, res: ApiResponse): Promis
     const { city, aqi, pm25, pm10, category, bestWindow, peak, household } = body;
 
     const sanitizedCity = typeof city === 'string' ? sanitizeQuery(city) : '';
-    if (!sanitizedCity || typeof aqi !== 'number' || !household) {
+    if (!sanitizedCity || typeof aqi !== 'number' || !Number.isFinite(aqi)) {
       sendError(res, 400, 'Invalid request body. Missing or invalid required fields.');
+      return;
+    }
+
+    if (!isValidHousehold(household) || !isValidBestWindow(bestWindow) || !isValidPeak(peak)) {
+      sendError(res, 400, 'Invalid request body. Malformed household, bestWindow, or peak fields.');
       return;
     }
 
@@ -156,7 +191,8 @@ REQUIREMENTS:
       return;
     }
 
-    const parsed = JSON.parse(text) as { readonly items?: unknown };
+    const cleanText = text.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+    const parsed = JSON.parse(cleanText) as { readonly items?: unknown };
     sendJson(res, 200, parsed);
   } catch (err: unknown) {
     const isTimeout = err instanceof Error && (err.name === 'TimeoutError' || err.name === 'AbortError');

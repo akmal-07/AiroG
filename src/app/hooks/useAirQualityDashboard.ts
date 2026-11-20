@@ -20,6 +20,17 @@ export function isSequenceCurrent(responseSeq: number, currentSeq: number): bool
   return responseSeq === currentSeq;
 }
 
+let globalPlanLoading = false;
+const planLoadingListeners = new Set<(loading: boolean) => void>();
+
+export function subscribePlanLoading(listener: (loading: boolean) => void): () => void {
+  planLoadingListeners.add(listener);
+  listener(globalPlanLoading);
+  return () => {
+    planLoadingListeners.delete(listener);
+  };
+}
+
 /**
  * Sanitizes and validates user city input (max 60 chars, trimmed, stripped of unsafe symbols).
  */
@@ -47,6 +58,11 @@ export function useAirQualityDashboard() {
   const [loadingPlan, setLoadingPlan] = useState(false);
   const [planError, setPlanError] = useState<string | null>(null);
 
+  useEffect(() => {
+    globalPlanLoading = loadingPlan;
+    planLoadingListeners.forEach((fn) => fn(loadingPlan));
+  }, [loadingPlan]);
+
   // Persistent live announcement for assistive technologies
   const [liveAnnouncement, setLiveAnnouncement] = useState('Welcome to AiroG.');
 
@@ -72,19 +88,22 @@ export function useAirQualityDashboard() {
 
         if (seq !== requestSeqRef.current) return;
 
-        const generated = await fetchDayPlan({
-          city: currentAqi.reading.city,
-          aqi: currentAqi.reading.aqi,
-          pm25: currentAqi.reading.pm25,
-          pm10: currentAqi.reading.pm10,
-          category: currentAqi.reading.category,
-          bestWindow: currentAqi.bestWindow,
-          peak: {
-            hour: currentAqi.bestWindow.peakHour,
-            aqi: currentAqi.bestWindow.peakAqi,
+        const generated = await fetchDayPlan(
+          {
+            city: currentAqi.reading.city,
+            aqi: currentAqi.reading.aqi,
+            pm25: currentAqi.reading.pm25,
+            pm10: currentAqi.reading.pm10,
+            category: currentAqi.reading.category,
+            bestWindow: currentAqi.bestWindow,
+            peak: {
+              hour: currentAqi.bestWindow.peakHour,
+              aqi: currentAqi.bestWindow.peakAqi,
+            },
+            household: currentHousehold,
           },
-          household: currentHousehold,
-        });
+          planAbortRef.current?.signal
+        );
 
         if (seq !== requestSeqRef.current) return;
 
@@ -134,6 +153,7 @@ export function useAirQualityDashboard() {
       if (planAbortRef.current) planAbortRef.current.abort();
       aqiAbortRef.current = new AbortController();
 
+      setActiveCity(sanitized);
       setLoadingAqi(true);
       setAqiError(null);
       setLoadingPlan(true);

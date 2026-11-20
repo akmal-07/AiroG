@@ -109,6 +109,41 @@ describe('Serverless Handler: /api/plan', () => {
     expect(result.json()).toEqual({ error: expect.stringContaining('Invalid or unrecognized CPCB') });
   });
 
+  it('returns 400 when household, bestWindow, or peak fields are malformed', async () => {
+    process.env['GEMINI_API_KEY'] = 'test-gemini-key';
+
+    // Malformed household (negative count or missing required boolean)
+    const req1 = createMockRequest({
+      method: 'POST',
+      url: '/api/plan',
+      body: { ...validPlanBody, household: { ...validPlanBody.household, adults: -1 } },
+    });
+    const { res: res1, getResult: getResult1 } = createMockResponse();
+    await handler(req1, res1);
+    expect(getResult1().statusCode).toBe(400);
+    expect(getResult1().json()).toEqual({ error: expect.stringContaining('Malformed household, bestWindow, or peak') });
+
+    // Malformed bestWindow (empty windowText)
+    const req2 = createMockRequest({
+      method: 'POST',
+      url: '/api/plan',
+      body: { ...validPlanBody, bestWindow: { ...validPlanBody.bestWindow, windowText: '   ' } },
+    });
+    const { res: res2, getResult: getResult2 } = createMockResponse();
+    await handler(req2, res2);
+    expect(getResult2().statusCode).toBe(400);
+
+    // Malformed peak (null or missing hour)
+    const req3 = createMockRequest({
+      method: 'POST',
+      url: '/api/plan',
+      body: { ...validPlanBody, peak: null },
+    });
+    const { res: res3, getResult: getResult3 } = createMockResponse();
+    await handler(req3, res3);
+    expect(getResult3().statusCode).toBe(400);
+  });
+
   it('sends thinkingConfig: { thinkingBudget: 0 } to Gemini to eliminate reasoning latency', async () => {
     process.env['GEMINI_API_KEY'] = 'test-gemini-key';
 
