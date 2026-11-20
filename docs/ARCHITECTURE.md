@@ -188,7 +188,7 @@ AiroG satisfies strict performance budgets ($\le 190$ kB initial critical JS) wh
 
 ```
 [ initial page load ]
-   ├── index-*.js (184.32 kB / 57.11 kB gzip)
+   ├── index-*.js (186.93 kB / 57.17 kB gzip)
    │     ├── React 18 & ReactDOM
    │     ├── AqiBadge, AqiLegend, Header, Footer
    │     ├── HouseholdForm (steppers & storage)

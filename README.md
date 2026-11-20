@@ -154,7 +154,7 @@ To achieve a 95+ Efficiency rating, AiroG employs aggressive code splitting and 
 
 | Metric | Before Optimization | After Optimization | Improvement |
 | :--- | :--- | :--- | :--- |
-| **Initial Critical JS (`index-*.js`)** | **279.98 kB** (84.81 kB gzip) | **184.32 kB** (57.13 kB gzip) | **-95.66 kB (-34.2%) reduction** |
+| **Initial Critical JS (`index-*.js`)** | **279.98 kB** (84.81 kB gzip) | **186.93 kB** (57.17 kB gzip) | **-93.05 kB (-33.2%) reduction (under 190 kB)** |
 | **Lazy Plan Engine (`plan-*.js`)** | *bundled in main* | **87.10 kB** (26.02 kB gzip) | Loaded dynamically on calculation |
 | **Lazy Plan UI (`PlanSection-*.js`)** | *bundled in main* | **11.77 kB** (3.25 kB gzip) | Code-split below the fold |
 | **CSS Bundle (`index-*.css`)** | 22.25 kB (4.74 kB gzip) | **23.10 kB** (4.85 kB gzip) | Purged utility CSS |
@@ -224,7 +224,7 @@ cp .env.example .env
 # Start local development server
 npm run dev
 
-# Run Vitest unit test suite (19 tests)
+# Run Vitest unit test suite (28 tests)
 npm test
 
 # Run strict TypeScript type-checking
@@ -238,8 +238,8 @@ npm run build
 
 ## 8. Test Suite Summary
 
-The automated Vitest test suite (`npm test`) verifies 19 distinct requirements across 3 test modules:
-- `src/features/aqi/__tests__/aqi.test.ts`: CPCB breakpoints, Delhi AQI 312 Very Poor verification, 6-band color-text pairing, 2-hour best window detection, peak smog hour detection, and 10-minute session caching.
+The automated Vitest test suite (`npm test`) verifies 28 distinct requirements across 3 test modules:
+- `src/features/aqi/__tests__/aqi.test.ts`: CPCB breakpoints, boundary edge cases (PM2.5 = 30, 60, 90, 120, 250, 380; PM10 = 50, 100, 250, 350, 430, 510), Delhi AQI 312 Very Poor verification, dominant pollutant evaluation, 6-band color-text pairing, 2-hour best window detection, peak smog hour detection, coordinate handling, suggestion label prefix matching, and session caching.
 - `src/features/plan/__tests__/plan.test.ts`: Deterministic fallback generation for vulnerable households, outdoor window scheduling, child/asthma protections, Zod schema validation, and plain-words impact rules.
 - `src/features/plan/__tests__/impact.test.ts`: Exposure score idempotency ($f(x) = f(x)$), transparent rule traces, `"Comfort, not exposure"` fallback, one-sentence headline generation, and methodology disclosure.
 

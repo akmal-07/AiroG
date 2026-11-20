@@ -15,7 +15,7 @@ Existing portals stop at raw numbers or display a generic 1–5 scale designed f
 
 For **PromptWars Virtual Challenge 06 (Urban Air Quality Assistant)**, I set out to build **AiroG** (*Airo* for air + *G* for guardian)—an assistant engineered specifically for Indian families that turns smog data into a personalized, low-emission daily routine.
 
-In Challenge 05, my project *Planovent* scored 94.47/100 (Rank #559 of 51,762). Our biggest point loss was in **Efficiency (80/100)** and **Code Quality (89/100)**. For Challenge 06, we set our sights on Rank #1.
+In Challenge 05, my project *Planovent* scored 94.47/100 (Rank #540 of 51,762). Our biggest point loss was in **Efficiency (80/100)** and **Code Quality (89/100)**. For Challenge 06, we set our sights on Rank #1.
 
 Here is the deep technical breakdown of how AiroG was built, where GenAI fits into the equation, and why deterministic mathematics must always govern environmental health decisions.
 
@@ -161,15 +161,15 @@ In AiroG, we implemented aggressive architectural code splitting:
 
 ### The Measurements:
 - **Before Optimization:** `index-*.js` = **279.98 kB** (84.81 kB gzip)
-- **After Optimization:** `index-*.js` = **184.32 kB** (57.13 kB gzip)
-- **Net Reduction:** **-95.66 kB (-34.2%)**
+- **After Optimization:** `index-*.js` = **186.93 kB** (57.17 kB gzip)
+- **Net Reduction:** **-93.05 kB (-33.2%)** (comfortably under the 190 kB budget)
 - **Lazy Plan Engine Chunk:** 87.10 kB (loaded asynchronously)
 
 ---
 
 ## 7. Testing & Verification
 
-AiroG includes a full Vitest test suite (`npm test`) covering **19 automated unit tests**:
+AiroG includes a full Vitest test suite (`npm test`) covering **28 automated unit tests**:
 - CPCB piecewise interpolation accuracy (including the Delhi AQI 312 benchmark).
 - Diurnal forecast window detection.
 - Zod schema validation boundaries and rule fallback generation.
