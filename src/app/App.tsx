@@ -1,450 +1,107 @@
-import React, { useEffect, useState, useCallback, useMemo, Suspense } from 'react';
+import React, { Suspense } from 'react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
-import { AqiBadge } from '@/features/aqi/components/AqiBadge';
-import { fetchAqiData } from '@/features/aqi/api/fetchAqi';
-import { CitySearchAutocomplete } from '@/features/aqi/components/CitySearchAutocomplete';
-import { HouseholdForm, initStorage, loadHousehold } from '@/features/household';
-import type { AqiFetchResult, DayPlan, Household, PlanItem } from '@/types';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { CitySearchBar } from '@/features/aqi/components/CitySearchBar';
+import { AqiHeroCard } from '@/features/aqi/components/AqiHeroCard';
+import { AqiStatusBanner } from '@/features/aqi/components/AqiStatusBanner';
+import { useAirQualityDashboard, POPULAR_CITIES } from './hooks/useAirQualityDashboard';
 
-// Code-split below-the-fold PlanSection for optimal initial bundle efficiency
+const HouseholdForm = React.lazy(() =>
+  import('@/features/household/components/HouseholdForm').then((m) => ({ default: m.HouseholdForm }))
+);
 const PlanSection = React.lazy(() =>
   import('@/features/plan/components/PlanSection').then((m) => ({ default: m.PlanSection }))
 );
-
-// Code-split below-the-fold AqiLegend to maintain strict <= 190 kB initial bundle budget
 const AqiLegend = React.lazy(() =>
   import('@/features/aqi/components/AqiLegend').then((m) => ({ default: m.AqiLegend }))
 );
 
-const POPULAR_CITIES = [
-  'Delhi',
-  'Mumbai',
-  'Bengaluru',
-  'Kolkata',
-  'Chennai',
-  'Hyderabad',
-  'Tirupati',
-] as const;
-
-// Accessible skeleton fallback while PlanSection bundle loads
-const PlanSectionSkeleton: React.FC = () => (
-  <div
-    role="status"
-    aria-label="Loading today's action plan section"
-    className="h-64 rounded-3xl border border-hairline bg-elevated p-6 animate-pulse"
-  />
+const Skeleton: React.FC<{ label: string; h: string }> = ({ label, h }) => (
+  <div role="status" aria-label={label} className={`${h} rounded-3xl border border-hairline bg-elevated p-6 animate-pulse`} />
 );
-
-// Accessible skeleton fallback while AqiLegend bundle loads
-const AqiLegendSkeleton: React.FC = () => (
-  <div
-    role="status"
-    aria-label="Loading CPCB AQI Scale legend"
-    className="h-48 rounded-3xl border border-hairline bg-elevated p-6 animate-pulse"
-  />
-);
-
-/**
- * Sanitizes and validates user city input (max 60 chars, trimmed, stripped of unsafe symbols).
- */
-function sanitizeCityInput(input: string): string {
-  return input
-    .trim()
-    .replace(/[^\w\s,.-]/gi, '')
-    .slice(0, 60);
-}
 
 export const App: React.FC = () => {
-  const [cityInput, setCityInput] = useState('Delhi');
-  const [activeCity, setActiveCity] = useState('Delhi');
-  const [loadingAqi, setLoadingAqi] = useState(true);
-  const [aqiError, setAqiError] = useState<string | null>(null);
-  const [aqiResult, setAqiResult] = useState<AqiFetchResult | null>(null);
-
-  const [household, setHousehold] = useState<Household>(() => initStorage());
-  const [plan, setPlan] = useState<DayPlan | null>(null);
-  const [loadingPlan, setLoadingPlan] = useState(false);
-  const [planError, setPlanError] = useState<string | null>(null);
-
-  // Load Day Plan when AQI result or household changes
-  const loadPlanForCurrentState = useCallback(
-    async (currentAqi: AqiFetchResult, currentHousehold: Household) => {
-      setLoadingPlan(true);
-      setPlanError(null);
-
-      try {
-        const [{ fetchDayPlan }, { computeItemImpact, generateDaySummary }] = await Promise.all([
-          import('@/features/plan/api/plan'),
-          import('@/features/plan/utils/impact'),
-        ]);
-        const generated = await fetchDayPlan({
-          city: currentAqi.reading.city,
-          aqi: currentAqi.reading.aqi,
-          pm25: currentAqi.reading.pm25,
-          pm10: currentAqi.reading.pm10,
-          category: currentAqi.reading.category,
-          bestWindow: currentAqi.bestWindow,
-          peak: {
-            hour: currentAqi.bestWindow.peakHour,
-            aqi: currentAqi.bestWindow.peakAqi,
-          },
-          household: currentHousehold,
-        });
-
-        // Attach deterministic impact models to each item
-        const enrichedItems: PlanItem[] = generated.items.map((item) => ({
-          ...item,
-          computedImpact: computeItemImpact(item, currentAqi.reading.category, currentHousehold),
-        }));
-
-        const summary = generateDaySummary(
-          currentAqi.reading.aqi,
-          currentAqi.reading.category,
-          currentHousehold,
-          enrichedItems
-        );
-
-        setPlan({
-          ...generated,
-          items: enrichedItems,
-          summary,
-        });
-      } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : 'Unable to generate day plan.';
-        setPlanError(msg);
-      } finally {
-        setLoadingPlan(false);
-      }
-    },
-    []
-  );
-
-  const loadCityData = useCallback(
-    async (rawCityName: string) => {
-      const sanitized = sanitizeCityInput(rawCityName);
-      if (!sanitized) return;
-
-      setLoadingAqi(true);
-      setAqiError(null);
-      // Mark plan section as loading while new city data is being fetched
-      setLoadingPlan(true);
-      setPlanError(null);
-
-      try {
-        const result = await fetchAqiData(sanitized);
-        setAqiResult(result);
-        setActiveCity(result.reading.city);
-        // Render hero card immediately without waiting for plan synthesis
-        setLoadingAqi(false);
-
-        // Asynchronously fetch AI plan in the background
-        const currentProfile = loadHousehold();
-        void loadPlanForCurrentState(result, currentProfile);
-      } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : 'Failed to retrieve air quality data.';
-        setAqiError(msg);
-        setAqiResult(null);
-        setPlan(null);
-        setLoadingAqi(false);
-        setLoadingPlan(false);
-      }
-    },
-    [loadPlanForCurrentState]
-  );
-
-  // Initial load on start: Delhi
-  useEffect(() => {
-    void loadCityData('Delhi');
-  }, [loadCityData]);
-
-  // Household changes trigger re-plan
-  const handleHouseholdChange = useCallback(
-    (updated: Household) => {
-      setHousehold(updated);
-      if (aqiResult) {
-        void loadPlanForCurrentState(aqiResult, updated);
-      }
-    },
-    [aqiResult, loadPlanForCurrentState]
-  );
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const sanitized = sanitizeCityInput(cityInput);
-    if (sanitized) {
-      void loadCityData(sanitized);
-    }
-  };
-
-  const handleCitySelect = (cityName: string) => {
-    const sanitized = sanitizeCityInput(cityName);
-    setCityInput(sanitized);
-    void loadCityData(sanitized);
-  };
-
-  const handleRetryAqi = () => {
-    void loadCityData(activeCity || cityInput || 'Delhi');
-  };
-
-  const handleRetryPlan = () => {
-    if (aqiResult) {
-      void loadPlanForCurrentState(aqiResult, household);
-    }
-  };
-
-  // Day Impact Summary from active plan
-  const daySummary = useMemo(() => {
-    if (!aqiResult || !plan) return null;
-    return plan.summary ?? null;
-  }, [aqiResult, plan]);
+  const {
+    cityInput,
+    setCityInput,
+    activeCity,
+    loadingAqi,
+    aqiError,
+    aqiResult,
+    plan,
+    loadingPlan,
+    planError,
+    liveAnnouncement,
+    daySummary,
+    handleSubmit,
+    handleCitySelect,
+    handleRetryAqi,
+    handleRetryPlan,
+    handleHouseholdChange,
+  } = useAirQualityDashboard();
 
   return (
     <div className="flex min-h-screen flex-col bg-canvas text-label-primary transition-colors duration-200">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-2xl focus:bg-label-primary focus:text-canvas focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:shadow-apple"
+      >
+        Skip to main content
+      </a>
+
+      <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+        {liveAnnouncement}
+      </div>
+
       <Header />
 
-      <main className="flex-1 py-8 sm:py-10" role="main">
+      <main id="main-content" tabIndex={-1} className="flex-1 py-8 sm:py-10 focus:outline-none" role="main">
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 space-y-8">
-          {/* City Selection Bar */}
-          <section aria-labelledby="city-search-heading" className="rounded-3xl border border-hairline bg-elevated p-5 sm:p-7 shadow-apple dark:shadow-none space-y-4 transition-colors">
-            <h2 id="city-search-heading" className="sr-only">
-              City Selection
-            </h2>
+          <CitySearchBar
+            cityInput={cityInput}
+            activeCity={activeCity}
+            loadingAqi={loadingAqi}
+            popularCities={POPULAR_CITIES}
+            onChangeCityInput={setCityInput}
+            onSelectCity={handleCitySelect}
+            onSubmit={handleSubmit}
+          />
 
-            <form onSubmit={handleSubmit} className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <CitySearchAutocomplete
-                value={cityInput}
-                onChange={setCityInput}
-                onSelect={handleCitySelect}
-                onSubmit={() => {
-                  const sanitized = sanitizeCityInput(cityInput);
-                  if (sanitized) {
-                    void loadCityData(sanitized);
-                  }
-                }}
-                disabled={loadingAqi}
+          <AqiStatusBanner
+            loadingAqi={loadingAqi}
+            aqiError={aqiError}
+            cityInput={cityInput}
+            onRetry={handleRetryAqi}
+          />
+
+          {!loadingAqi && !aqiError && aqiResult && <AqiHeroCard aqiResult={aqiResult} />}
+
+          <ErrorBoundary fallbackMessage="Unable to display the household profile settings.">
+            <Suspense fallback={<Skeleton label="Loading household form" h="h-44" />}>
+              <HouseholdForm onHouseholdChange={handleHouseholdChange} />
+            </Suspense>
+          </ErrorBoundary>
+
+          <ErrorBoundary fallbackMessage="Unable to display the low-emission day plan." onReset={handleRetryPlan}>
+            <Suspense fallback={<Skeleton label="Loading plan section" h="h-64" />}>
+              <PlanSection
+                plan={plan}
+                daySummary={daySummary}
+                aqiResult={aqiResult}
+                activeCity={activeCity}
+                loadingPlan={loadingPlan}
+                planError={planError}
+                onRetryPlan={handleRetryPlan}
               />
+            </Suspense>
+          </ErrorBoundary>
 
-              <button
-                type="submit"
-                disabled={loadingAqi}
-                className="inline-flex items-center justify-center rounded-2xl bg-accent-blue hover:opacity-90 px-6 py-3 text-sm font-semibold text-white shadow-xs transition active:scale-98 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-blue disabled:opacity-50"
-              >
-                {loadingAqi ? (
-                  <span className="flex items-center gap-2">
-                    <svg className="h-4 w-4 animate-spin text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                      <circle cx="12" cy="12" r="10" strokeDasharray="32" strokeLinecap="round" />
-                    </svg>
-                    Checking...
-                  </span>
-                ) : (
-                  'Check Air Quality'
-                )}
-              </button>
-            </form>
-
-            {/* Quick-pick Indian cities */}
-            <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-hairline">
-              <span className="text-xs font-semibold text-label-secondary">Quick select:</span>
-              <div className="flex flex-wrap gap-2" role="group" aria-label="Quick select cities">
-                {POPULAR_CITIES.map((c) => {
-                  const isSelected = activeCity.toLowerCase() === c.toLowerCase();
-                  return (
-                    <button
-                      key={c}
-                      type="button"
-                      aria-pressed={isSelected}
-                      onClick={() => handleCitySelect(c)}
-                      className={`rounded-full px-3.5 py-1 text-xs font-semibold transition active:scale-95 focus-visible:outline-2 focus-visible:outline-accent-blue ${
-                        isSelected
-                          ? 'bg-label-primary text-canvas shadow-xs'
-                          : 'bg-nested text-label-primary hover:opacity-80 border border-hairline'
-                      }`}
-                    >
-                      {c}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </section>
-
-          {/* Loading State for AQI */}
-          {loadingAqi && (
-            <section
-              role="status"
-              aria-live="polite"
-              className="flex flex-col items-center justify-center rounded-3xl border border-hairline bg-elevated p-12 text-center shadow-apple dark:shadow-none transition-colors"
-            >
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-accent-blue/10 text-accent-blue">
-                <svg className="h-6 w-6 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                  <circle cx="12" cy="12" r="10" strokeDasharray="32" strokeLinecap="round" />
-                </svg>
-              </div>
-              <p className="mt-4 text-sm font-medium text-label-primary">
-                Fetching CPCB air quality and hourly forecast for {cityInput}...
-              </p>
-              <span className="sr-only">Loading air quality data</span>
-            </section>
-          )}
-
-          {/* Error & Retry State for AQI */}
-          {!loadingAqi && aqiError && (
-            <section
-              role="alert"
-              className="rounded-3xl border border-rose-200 bg-rose-50/80 dark:bg-rose-950/30 dark:border-rose-900/50 p-6 shadow-apple dark:shadow-none transition-colors"
-            >
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-start gap-3.5">
-                  <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-rose-100 dark:bg-rose-900/50 text-rose-700 dark:text-rose-300" aria-hidden="true">
-                    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="12" cy="12" r="10" />
-                      <line x1="12" y1="8" x2="12" y2="12" />
-                      <line x1="12" y1="16" x2="12.01" y2="16" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-rose-950 dark:text-rose-200">Unable to retrieve air quality data</h3>
-                    <p className="mt-1 text-sm text-rose-800 dark:text-rose-300">{aqiError}</p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={handleRetryAqi}
-                  className="inline-flex items-center justify-center rounded-full bg-elevated px-4 py-2 text-xs font-semibold text-rose-900 dark:text-rose-200 shadow-sm ring-1 ring-rose-300 dark:ring-rose-800 hover:bg-nested transition active:scale-95 focus-visible:outline-accent-blue"
-                >
-                  <svg className="mr-1.5 h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-                    <path d="M3 3v5h5" />
-                    <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
-                    <path d="M16 21h5v-5" />
-                  </svg>
-                  Retry Search
-                </button>
-              </div>
-            </section>
-          )}
-
-          {/* Active Air Quality Card */}
-          {!loadingAqi && !aqiError && aqiResult && (
-            <section
-              aria-labelledby="live-aqi-heading"
-              className="rounded-3xl border border-hairline bg-elevated p-6 sm:p-8 shadow-apple dark:shadow-none space-y-6 transition-colors"
-            >
-              {/* Card Header: City + Updated + Demo Data Badge */}
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-hairline pb-5">
-                <div>
-                  <div className="flex items-center gap-2.5">
-                    <h2 id="live-aqi-heading" className="text-2xl sm:text-3xl font-semibold tracking-tight text-label-primary">
-                      {aqiResult.reading.city}
-                    </h2>
-                    {aqiResult.isDemo && (
-                      <span
-                        className="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/50 px-2.5 py-0.5 text-xs font-semibold text-amber-800"
-                        title="Using curated Indian demo dataset. Configure OPENWEATHER_API_KEY for live readings."
-                      >
-                        <span className="h-1.5 w-1.5 rounded-full bg-amber-500" aria-hidden="true" />
-                        demo data
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs sm:text-sm text-label-secondary mt-1">
-                    Indian CPCB Scale &bull; Updated {new Date(aqiResult.reading.updatedAt).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true })}
-                  </p>
-                </div>
-
-                <div>
-                  <AqiBadge aqi={aqiResult.reading.aqi} size="xl" />
-                </div>
-              </div>
-
-              {/* Pollutants + Best Window Highlights Grid with generous p-5 padding */}
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                {/* PM2.5 */}
-                <div className="flex flex-col justify-between rounded-2xl border border-hairline bg-nested p-5 transition-all">
-                  <div className="flex items-center justify-between text-xs text-label-secondary">
-                    <span className="font-semibold text-label-primary">PM2.5</span>
-                    <span>Primary Smog</span>
-                  </div>
-                  <div className="my-3 flex items-baseline gap-1.5">
-                    <span className="text-3xl font-semibold tabular-nums tracking-tight text-label-primary">
-                      {aqiResult.reading.pm25 !== undefined ? Math.round(aqiResult.reading.pm25) : '—'}
-                    </span>
-                    <span className="text-xs text-label-secondary">&mu;g/m&sup3;</span>
-                  </div>
-                  <p className="text-xs text-label-secondary leading-relaxed">
-                    Fine inhalable particles from smoke & vehicles.
-                  </p>
-                </div>
-
-                {/* PM10 */}
-                <div className="flex flex-col justify-between rounded-2xl border border-hairline bg-nested p-5 transition-all">
-                  <div className="flex items-center justify-between text-xs text-label-secondary">
-                    <span className="font-semibold text-label-primary">PM10</span>
-                    <span>Coarse Dust</span>
-                  </div>
-                  <div className="my-3 flex items-baseline gap-1.5">
-                    <span className="text-3xl font-semibold tabular-nums tracking-tight text-label-primary">
-                      {aqiResult.reading.pm10 !== undefined ? Math.round(aqiResult.reading.pm10) : '—'}
-                    </span>
-                    <span className="text-xs text-label-secondary">&mu;g/m&sup3;</span>
-                  </div>
-                  <p className="text-xs text-label-secondary leading-relaxed">
-                    Coarse dust, road emissions, and construction debris.
-                  </p>
-                </div>
-
-                {/* Best Outdoor Window - Neutral Apple card with clean accent */}
-                <div className="flex flex-col justify-between rounded-2xl border border-hairline bg-nested p-5 transition-all">
-                  <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-800 dark:text-emerald-300">
-                    <span className="h-2 w-2 rounded-full bg-emerald-600 shrink-0" aria-hidden="true" />
-                    <span>Best Window Today</span>
-                  </div>
-                  <div className="my-3 text-lg font-semibold tracking-tight text-label-primary">
-                    {aqiResult.bestWindow.windowText}
-                  </div>
-                  <p className="text-xs text-label-secondary leading-relaxed">
-                    Lowest-AQI stretch (~{aqiResult.bestWindow.averageAqi} AQI). Safer for errands.
-                  </p>
-                </div>
-
-                {/* Peak Smog Hour - Neutral Apple card with clean accent */}
-                <div className="flex flex-col justify-between rounded-2xl border border-hairline bg-nested p-5 transition-all">
-                  <div className="flex items-center gap-1.5 text-xs font-semibold text-rose-800 dark:text-rose-300">
-                    <span className="h-2 w-2 rounded-full bg-rose-600 shrink-0" aria-hidden="true" />
-                    <span>Peak Smog Hour</span>
-                  </div>
-                  <div className="my-3 text-lg font-semibold tracking-tight text-label-primary">
-                    Around {aqiResult.bestWindow.peakHour}
-                  </div>
-                  <p className="text-xs text-label-secondary leading-relaxed">
-                    Highest pollution peak (~{aqiResult.bestWindow.peakAqi} AQI). Keep windows closed.
-                  </p>
-                </div>
-              </div>
-            </section>
-          )}
-
-          {/* Household Profile Form */}
-          <HouseholdForm onHouseholdChange={handleHouseholdChange} />
-
-          {/* Code-Split Lazy Loaded Plan Section */}
-          <Suspense fallback={<PlanSectionSkeleton />}>
-            <PlanSection
-              plan={plan}
-              daySummary={daySummary}
-              aqiResult={aqiResult}
-              activeCity={activeCity}
-              loadingPlan={loadingPlan}
-              planError={planError}
-              onRetryPlan={handleRetryPlan}
-            />
-          </Suspense>
-
-          {/* CPCB 6-Band Standard Legend */}
-          <Suspense fallback={<AqiLegendSkeleton />}>
-            <AqiLegend />
-          </Suspense>
+          <ErrorBoundary fallbackMessage="Unable to display the AQI scale legend.">
+            <Suspense fallback={<Skeleton label="Loading CPCB AQI legend" h="h-48" />}>
+              <AqiLegend />
+            </Suspense>
+          </ErrorBoundary>
         </div>
       </main>
 

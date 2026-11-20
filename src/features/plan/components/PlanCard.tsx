@@ -92,9 +92,9 @@ const PlanCardComponent: React.FC<PlanCardProps> = ({ item }) => {
           </span>
         </div>
 
-        <h3 className="mt-3.5 text-base font-semibold tracking-tight text-label-primary leading-snug">
+        <h4 className="mt-3.5 text-base font-semibold tracking-tight text-label-primary leading-snug">
           {item.title}
-        </h3>
+        </h4>
 
         <p className="mt-2 text-sm leading-relaxed text-label-secondary">
           {item.detail}

@@ -38,7 +38,6 @@ export const CitySearchAutocomplete: React.FC<CitySearchAutocompleteProps> = ({
   // Debounced search with AbortController (250ms)
   useEffect(() => {
     const trimmed = value.trim();
-
     if (trimmed.length < 2) {
       setSuggestions([]);
       setIsOpen(false);
@@ -47,20 +46,14 @@ export const CitySearchAutocomplete: React.FC<CitySearchAutocompleteProps> = ({
       return;
     }
 
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-
+    if (abortControllerRef.current) abortControllerRef.current.abort();
     const controller = new AbortController();
     abortControllerRef.current = controller;
 
     const timer = setTimeout(async () => {
       setIsLoading(true);
       try {
-        const res = await fetch(`/api/suggest?q=${encodeURIComponent(trimmed)}`, {
-          signal: controller.signal,
-        });
-
+        const res = await fetch(`/api/suggest?q=${encodeURIComponent(trimmed)}`, { signal: controller.signal });
         if (res.ok) {
           const data = (await res.json()) as { suggestions?: SuggestionItem[] };
           const items = Array.isArray(data.suggestions) ? data.suggestions : [];
@@ -98,15 +91,12 @@ export const CitySearchAutocomplete: React.FC<CitySearchAutocompleteProps> = ({
     return () => document.removeEventListener('mousedown', handleOutside);
   }, []);
 
-  const handleSelect = useCallback(
-    (item: SuggestionItem) => {
-      onChange(item.label);
-      setIsOpen(false);
-      setActiveIndex(-1);
-      onSelect(item.label);
-    },
-    [onChange, onSelect]
-  );
+  const handleSelect = useCallback((item: SuggestionItem) => {
+    onChange(item.label);
+    setIsOpen(false);
+    setActiveIndex(-1);
+    onSelect(item.label);
+  }, [onChange, onSelect]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (!isOpen || suggestions.length === 0) {
@@ -117,7 +107,6 @@ export const CitySearchAutocomplete: React.FC<CitySearchAutocompleteProps> = ({
       }
       return;
     }
-
     if (e.key === 'ArrowDown') {
       e.preventDefault();
       setActiveIndex((prev) => (prev + 1) % suggestions.length);
@@ -125,8 +114,8 @@ export const CitySearchAutocomplete: React.FC<CitySearchAutocompleteProps> = ({
       e.preventDefault();
       setActiveIndex((prev) => (prev <= 0 ? suggestions.length - 1 : prev - 1));
     } else if (e.key === 'Enter') {
+      e.preventDefault();
       if (activeIndex >= 0 && suggestions[activeIndex]) {
-        e.preventDefault();
         handleSelect(suggestions[activeIndex]);
       } else {
         setIsOpen(false);
@@ -144,6 +133,13 @@ export const CitySearchAutocomplete: React.FC<CitySearchAutocompleteProps> = ({
       <label htmlFor="city-input" className="sr-only">
         Enter city name
       </label>
+
+      {/* Screen reader live notification for available suggestions */}
+      <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+        {isOpen && suggestions.length > 0
+          ? `${suggestions.length} suggestion${suggestions.length === 1 ? '' : 's'} available`
+          : ''}
+      </div>
 
       {/* Input with WAI-ARIA Combobox Semantics */}
       <div className="relative">
@@ -171,16 +167,12 @@ export const CitySearchAutocomplete: React.FC<CitySearchAutocompleteProps> = ({
           aria-autocomplete="list"
           aria-expanded={isOpen && suggestions.length > 0}
           aria-controls="city-suggestions-listbox"
-          aria-activedescendant={
-            isOpen && activeIndex >= 0 ? `city-option-${activeIndex}` : undefined
-          }
+          aria-activedescendant={isOpen && activeIndex >= 0 ? `city-option-${activeIndex}` : undefined}
           maxLength={60}
           disabled={disabled}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          onFocus={() => {
-            if (suggestions.length > 0) setIsOpen(true);
-          }}
+          onFocus={() => { if (suggestions.length > 0) setIsOpen(true); }}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           autoComplete="off"
@@ -206,27 +198,18 @@ export const CitySearchAutocomplete: React.FC<CitySearchAutocompleteProps> = ({
                 id={`city-option-${index}`}
                 role="option"
                 aria-selected={isSelected}
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  handleSelect(item);
-                }}
+                onMouseDown={(e) => { e.preventDefault(); handleSelect(item); }}
                 onMouseEnter={() => setActiveIndex(index)}
                 className={`flex items-center justify-between rounded-xl px-3.5 py-2.5 text-left transition-colors cursor-pointer select-none ${
                   isSelected ? 'bg-nested text-label-primary ring-1 ring-hairline' : 'text-label-primary hover:bg-nested/70'
                 }`}
               >
                 <div className="flex flex-col truncate pr-2">
-                  <span className="text-sm font-semibold tracking-tight text-label-primary truncate">
-                    {item.name}
-                  </span>
-                  {subtitle && (
-                    <span className="text-xs text-label-secondary truncate">{item.label}</span>
-                  )}
+                  <span className="text-sm font-semibold tracking-tight text-label-primary truncate">{item.name}</span>
+                  {subtitle && <span className="text-xs text-label-secondary truncate">{item.label}</span>}
                 </div>
                 {item.country === 'IN' && (
-                  <span className="shrink-0 text-[10px] font-semibold text-label-secondary bg-nested px-1.5 py-0.5 rounded border border-hairline">
-                    IN
-                  </span>
+                  <span className="shrink-0 text-[10px] font-semibold text-label-secondary bg-nested px-1.5 py-0.5 rounded border border-hairline">IN</span>
                 )}
               </li>
             );

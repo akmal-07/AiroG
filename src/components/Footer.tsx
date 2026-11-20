@@ -1,46 +1,8 @@
-import React, { useState, useEffect } from 'react';
-
-type ThemeMode = 'light' | 'dark' | 'auto';
+import React from 'react';
+import { useTheme } from '@/features/theme/useTheme';
 
 export const Footer: React.FC = () => {
-  const [theme, setTheme] = useState<ThemeMode>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('airog_theme');
-      if (saved === 'light' || saved === 'dark' || saved === 'auto') {
-        return saved;
-      }
-    }
-    return 'auto';
-  });
-
-  useEffect(() => {
-    const applyTheme = (mode: ThemeMode) => {
-      const root = document.documentElement;
-      const isDark =
-        mode === 'dark' ||
-        (mode === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-      if (isDark) {
-        root.classList.add('dark');
-      } else {
-        root.classList.remove('dark');
-      }
-    };
-
-    applyTheme(theme);
-    try {
-      localStorage.setItem('airog_theme', theme);
-    } catch {}
-
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleOsChange = () => {
-      if (theme === 'auto') {
-        applyTheme('auto');
-      }
-    };
-
-    mediaQuery.addEventListener('change', handleOsChange);
-    return () => mediaQuery.removeEventListener('change', handleOsChange);
-  }, [theme]);
+  const { theme, setTheme } = useTheme();
 
   return (
     <footer className="mt-auto border-t border-hairline bg-elevated py-8 transition-colors" role="contentinfo">

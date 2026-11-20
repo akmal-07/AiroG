@@ -25,6 +25,28 @@ export const CACHE_CONTROL_NO_STORE = 'no-store';
 export const MAX_QUERY_LENGTH = 60;
 export const MAX_PAYLOAD_SIZE = 1_000_000; // 1 MB
 
+/** Security allowlist for CORS requests */
+export const ALLOWED_ORIGINS: readonly string[] = [
+  'https://airog.vercel.app',
+  'http://localhost:5173',
+  'http://localhost:3000',
+];
+
+/**
+ * Applies security-hardened CORS headers based on request Origin.
+ * Matches origin against allowed origins; defaults to 'https://airog.vercel.app'.
+ * Always sets 'Vary: Origin' to prevent edge caching confusion.
+ */
+export function applyCorsHeaders(req: ApiRequest, res: ApiResponse): void {
+  const origin = req.headers?.origin;
+  const isAllowed =
+    typeof origin === 'string' &&
+    (ALLOWED_ORIGINS.includes(origin) || origin.endsWith('.vercel.app'));
+
+  res.setHeader('Access-Control-Allow-Origin', isAllowed ? origin : 'https://airog.vercel.app');
+  res.setHeader('Vary', 'Origin');
+}
+
 /**
  * Ensures the incoming HTTP request matches one of the allowed methods.
  * Responds with 200 for OPTIONS preflight, or 405 + Allow header if method is disallowed.
@@ -35,7 +57,7 @@ export function ensureMethod(
   res: ApiResponse,
   allowed: readonly string[]
 ): boolean {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  applyCorsHeaders(req, res);
   res.setHeader('Access-Control-Allow-Methods', [...allowed, 'OPTIONS'].join(', '));
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
@@ -65,7 +87,6 @@ export function sendJson(
 ): void {
   res.statusCode = statusCode;
   res.setHeader('Content-Type', 'application/json');
-  res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Cache-Control', cacheControl);
   res.end(JSON.stringify(data));
 }

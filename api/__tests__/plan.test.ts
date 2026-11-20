@@ -51,7 +51,7 @@ describe('Serverless Handler: /api/plan', () => {
     expect(result.json()).toEqual({ error: expect.stringContaining('Method Not Allowed') });
   });
 
-  it('handles OPTIONS preflight with 200 and CORS headers', async () => {
+  it('handles OPTIONS preflight with 200 and hardened CORS headers', async () => {
     const req = createMockRequest({ method: 'OPTIONS', url: '/api/plan' });
     const { res, getResult } = createMockResponse();
 
@@ -59,7 +59,8 @@ describe('Serverless Handler: /api/plan', () => {
     const result = getResult();
 
     expect(result.statusCode).toBe(200);
-    expect(result.headers['access-control-allow-origin']).toBe('*');
+    expect(result.headers['access-control-allow-origin']).toBe('https://airog.vercel.app');
+    expect(result.headers['vary']).toBe('Origin');
   });
 
   it('returns 500 when GEMINI_API_KEY is not configured without leaking internals', async () => {

@@ -27,7 +27,7 @@ describe('Serverless Handler: /api/suggest', () => {
     expect(result.json()).toEqual({ error: expect.stringContaining('Method Not Allowed') });
   });
 
-  it('handles OPTIONS preflight with 200 and CORS headers', async () => {
+  it('handles OPTIONS preflight with 200 and hardened CORS headers', async () => {
     const req = createMockRequest({ method: 'OPTIONS', url: '/api/suggest' });
     const { res, getResult } = createMockResponse();
 
@@ -35,7 +35,24 @@ describe('Serverless Handler: /api/suggest', () => {
     const result = getResult();
 
     expect(result.statusCode).toBe(200);
-    expect(result.headers['access-control-allow-origin']).toBe('*');
+    expect(result.headers['access-control-allow-origin']).toBe('https://airog.vercel.app');
+    expect(result.headers['vary']).toBe('Origin');
+  });
+
+  it('reflects allowed origin for local development CORS', async () => {
+    const req = createMockRequest({
+      method: 'OPTIONS',
+      url: '/api/suggest',
+      headers: { origin: 'http://localhost:5173' },
+    });
+    const { res, getResult } = createMockResponse();
+
+    await handler(req, res);
+    const result = getResult();
+
+    expect(result.statusCode).toBe(200);
+    expect(result.headers['access-control-allow-origin']).toBe('http://localhost:5173');
+    expect(result.headers['vary']).toBe('Origin');
   });
 
   it('returns empty suggestions for query length under 2 characters', async () => {

@@ -161,21 +161,23 @@ In AiroG, we implemented aggressive architectural code splitting:
 
 ### The Measurements:
 - **Before Optimization:** `index-*.js` = **279.98 kB** (84.81 kB gzip)
-- **After Optimization:** `index-*.js` = **186.93 kB** (57.17 kB gzip)
-- **Net Reduction:** **-93.05 kB (-33.2%)** (comfortably under the 190 kB budget)
+- **After Optimization:** `index-*.js` = **181.34 kB** (57.24 kB gzip)
+- **Net Reduction:** **-98.64 kB (-35.2%)** (comfortably under the 188 kB budget)
 - **Lazy Plan Engine Chunk:** 87.10 kB (loaded asynchronously)
 
 ---
 
 ## 7. Testing & Verification
 
-AiroG includes a full Vitest test suite (`npm test`) covering **28 automated unit tests**:
+AiroG includes a full Vitest test suite (`npm test`) covering **75 automated unit tests across 9 test suites**:
+- Serverless API handlers (`api/_utils.ts`, `api/aqi.ts`, `api/suggest.ts`, `api/plan.ts`) with origin allowlisting and zero-thinking budget.
 - CPCB piecewise interpolation accuracy (including the Delhi AQI 312 benchmark).
-- Diurnal forecast window detection.
-- Zod schema validation boundaries and rule fallback generation.
+- Diurnal forecast window detection and in-memory cache TTL.
+- Zod schema validation boundaries and deterministic rule fallback generation.
 - Idempotency of the 0–100 daily exposure score ($f(x) = f(x)$ across all identical runs).
+- React Error Boundary graceful crash isolation and retry triggers.
 
-Running `npm test`, `npx tsc --noEmit`, and `npm run build` yields zero errors, zero warnings, and zero `any` types.
+Running `npm test`, `npm run typecheck`, and `npm run build` yields zero errors, zero warnings, and zero `any` types.
 
 ---
 

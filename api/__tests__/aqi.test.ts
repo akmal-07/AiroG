@@ -27,7 +27,7 @@ describe('Serverless Handler: /api/aqi', () => {
     expect(result.json()).toEqual({ error: expect.stringContaining('Method Not Allowed') });
   });
 
-  it('handles OPTIONS preflight with 200 and CORS headers', async () => {
+  it('handles OPTIONS preflight with 200 and hardened CORS headers', async () => {
     const req = createMockRequest({ method: 'OPTIONS', url: '/api/aqi' });
     const { res, getResult } = createMockResponse();
 
@@ -35,7 +35,23 @@ describe('Serverless Handler: /api/aqi', () => {
     const result = getResult();
 
     expect(result.statusCode).toBe(200);
-    expect(result.headers['access-control-allow-origin']).toBe('*');
+    expect(result.headers['access-control-allow-origin']).toBe('https://airog.vercel.app');
+    expect(result.headers['vary']).toBe('Origin');
+  });
+
+  it('rejects untrusted origin by falling back to production domain', async () => {
+    const req = createMockRequest({
+      method: 'OPTIONS',
+      url: '/api/aqi',
+      headers: { origin: 'https://evil-hacker.com' },
+    });
+    const { res, getResult } = createMockResponse();
+
+    await handler(req, res);
+    const result = getResult();
+
+    expect(result.statusCode).toBe(200);
+    expect(result.headers['access-control-allow-origin']).toBe('https://airog.vercel.app');
   });
 
   it('returns 400 when city query parameter is missing or empty', async () => {

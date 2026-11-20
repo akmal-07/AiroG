@@ -184,19 +184,25 @@ Each action item is categorized into one of four deterministic tiers:
 
 ## 6. Bundle Optimization & Code Splitting Architecture
 
-AiroG satisfies strict performance budgets ($\le 190$ kB initial critical JS) while retaining runtime Zod schema validation:
+AiroG satisfies strict performance budgets ($\le 188$ kB initial critical JS) while retaining runtime Zod schema validation:
 
 ```
 [ initial page load ]
-   ├── index-*.js (186.93 kB / 57.17 kB gzip)
+   ├── index-*.js (181.34 kB / 57.24 kB gzip)
    │     ├── React 18 & ReactDOM
-   │     ├── AqiBadge, AqiLegend, Header, Footer
-   │     ├── HouseholdForm (steppers & storage)
+   │     ├── AqiHeroCard, CitySearchBar, AqiStatusBanner, Header, Footer
+   │     ├── ErrorBoundary & useAirQualityDashboard
    │     └── CPCB NAQI math & window detection
    │
 [ deferred code-split chunks ]
-   ├── PlanSection-*.js (11.77 kB / 3.25 kB gzip)
+   ├── HouseholdForm-*.js (9.25 kB / 1.69 kB gzip)
+   │     └── React.lazy loaded household demographic form
+   │
+   ├── PlanSection-*.js (14.85 kB / 4.48 kB gzip)
    │     └── React.lazy loaded below-the-fold plan UI
+   │
+   ├── AqiLegend-*.js (2.27 kB / 0.93 kB gzip)
+   │     └── React.lazy loaded CPCB scale reference table
    │
    └── plan-*.js (87.10 kB / 26.02 kB gzip)
          ├── Zod runtime library
@@ -206,13 +212,15 @@ AiroG satisfies strict performance budgets ($\le 190$ kB initial critical JS) wh
 
 ### Key Invariants:
 1. **Dynamic Import for Plan Engine:** `src/features/plan/api/plan.ts` is only fetched when the client initiates plan generation (`await import('@/features/plan/api/plan')`). This isolates `zod` entirely from the critical rendering path.
-2. **No Barrel Leakage:** `src/features/plan/` purposefully omits a top-level `index.ts` to prevent bundler tree-shaking failures from pulling heavy validation dependencies into `main`.
-3. **Session Cache:** `fetchAqiData` maintains an in-memory 10-minute cache with city-key normalization, eliminating redundant API round-trips.
+2. **Modular Architecture:** `src/app/App.tsx` is kept under 120 lines, delegating domain logic to `useAirQualityDashboard.ts`, visual modules (`AqiHeroCard`, `CitySearchBar`, `AqiStatusBanner`), and `useTheme.ts`.
+3. **No Barrel Leakage:** `src/features/plan/` purposefully omits a top-level `index.ts` to prevent bundler tree-shaking failures from pulling heavy validation dependencies into `main`.
+4. **Session Cache:** `fetchAqiData` maintains an in-memory 10-minute cache with city-key normalization, eliminating redundant API round-trips.
 
 ---
 
 ## 7. Security & Privacy Guarantees
 
-1. **Zero Secret Leakage:** Neither `GEMINI_API_KEY` nor `OPENWEATHER_API_KEY` is ever bundled in client code. All external requests route through serverless edge functions (`api/aqi.ts`, `api/plan.ts`).
-2. **Input Sanitization:** User city inputs are sanitized against regex `/[^\w\s,.-]/gi` and clamped to 60 characters. Household demographics are bounded between 0 and 20.
-3. **Local Storage Privacy:** Household demographic counts and toggles are stored exclusively on the user’s device under `localStorage['airog_v1']`. Zero personal data is transmitted to external telemetry or third-party trackers.
+1. **Hardened CORS Without Wildcards:** API endpoints (`api/aqi.ts`, `api/suggest.ts`, `api/plan.ts`) implement strict origin allowlisting (`https://airog.vercel.app`, `localhost:5173`, `localhost:3000`) with `Vary: Origin`, preventing wildcard reflection.
+2. **Zero Secret Leakage:** Neither `GEMINI_API_KEY` nor `OPENWEATHER_API_KEY` is ever bundled in client code. All external requests route through serverless edge functions (`api/aqi.ts`, `api/plan.ts`).
+3. **Input Sanitization:** User city inputs are sanitized against regex `/[^\w\s,.-]/gi` and clamped to 60 characters. Household demographics are bounded between 0 and 20.
+4. **Local Storage Privacy:** Household demographic counts and toggles are stored exclusively on the user’s device under `localStorage['airog_v1']`. Zero personal data is transmitted to external telemetry or third-party trackers.

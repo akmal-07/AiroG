@@ -43,6 +43,7 @@ export const PlanSectionComponent: React.FC<PlanSectionProps> = ({
   return (
     <section
       aria-labelledby="plan-section-heading"
+      aria-busy={loadingPlan}
       className="rounded-3xl border border-hairline bg-elevated p-6 sm:p-8 shadow-apple dark:shadow-none space-y-6 transition-colors"
     >
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-hairline pb-5">
