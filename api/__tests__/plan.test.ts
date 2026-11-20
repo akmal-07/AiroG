@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import handler from '../plan.js';
+import handler, { PLAN_RESPONSE_SCHEMA } from '../plan.js';
 import { createMockRequest, createMockResponse } from './mockHttp.js';
 
 describe('Serverless Handler: /api/plan', () => {
@@ -204,12 +204,102 @@ describe('Serverless Handler: /api/plan', () => {
     expect(captured.requestBody).not.toBeNull();
     expect(captured.requestBody?.generationConfig).toEqual({
       responseMimeType: 'application/json',
+      responseSchema: PLAN_RESPONSE_SCHEMA,
       thinkingConfig: {
         thinkingLevel: 'minimal',
       },
     });
     expect(captured.requestBody?.generationConfig).not.toHaveProperty('temperature');
     expect(captured.requestBody?.generationConfig).not.toHaveProperty('thinkingBudget');
+
+    // Verify responseSchema contains only Gemini OpenAPI subset keywords
+    const schemaStr = JSON.stringify(captured.requestBody?.generationConfig?.['responseSchema']);
+    expect(schemaStr).not.toContain('additionalProperties');
+    expect(schemaStr).not.toContain('$schema');
+    expect(schemaStr).not.toContain('minLength');
+    expect(schemaStr).not.toContain('maxLength');
+    expect(schemaStr).not.toContain('minItems');
+    expect(schemaStr).not.toContain('maxItems');
+  });
+
+  it('retries once on transient upstream failure (e.g., 503) and succeeds on second attempt, but does not retry 400', async () => {
+    process.env['GEMINI_API_KEY'] = 'test-gemini-key';
+
+    let attempts = 0;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation(() => {
+        attempts++;
+        if (attempts === 1) {
+          // Transient 503 on attempt 1
+          return Promise.resolve({
+            ok: false,
+            status: 503,
+            statusText: 'Service Unavailable',
+          });
+        }
+        // Success on attempt 2
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: async () => ({
+            candidates: [
+              {
+                content: {
+                  parts: [
+                    {
+                      text: JSON.stringify({
+                        items: [
+                          {
+                            id: 'item-1',
+                            title: 'Window Ventilation',
+                            detail: 'Open windows in afternoon.',
+                            impact: 'Fresh air without heavy smog',
+                            category: 'routines',
+                          },
+                        ],
+                      }),
+                    },
+                  ],
+                },
+              },
+            ],
+          }),
+        });
+      })
+    );
+
+    const req = createMockRequest({ method: 'POST', url: '/api/plan', body: validPlanBody });
+    const { res, getResult } = createMockResponse();
+
+    await handler(req, res);
+    const result = getResult();
+
+    expect(attempts).toBe(2);
+    expect(result.statusCode).toBe(200);
+
+    // Verify it does NOT retry on permanent 400 error
+    let badRequestAttempts = 0;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation(() => {
+        badRequestAttempts++;
+        return Promise.resolve({
+          ok: false,
+          status: 400,
+          statusText: 'Bad Request',
+        });
+      })
+    );
+
+    const badReq = createMockRequest({ method: 'POST', url: '/api/plan', body: validPlanBody });
+    const { res: badRes, getResult: getBadResult } = createMockResponse();
+
+    await handler(badReq, badRes);
+    const badResult = getBadResult();
+
+    expect(badRequestAttempts).toBe(1); // Exactly 1 attempt, NO retry on 400!
+    expect(badResult.statusCode).toBe(502);
   });
 
   it('returns structured JSON items and no-store Cache-Control on success', async () => {

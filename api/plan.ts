@@ -8,8 +8,34 @@ import {
   readJsonBody,
   fetchWithTimeout,
   sanitizeQuery,
-  TIMEOUT_PLAN_MS,
 } from './_utils.js';
+
+export const PLAN_RESPONSE_SCHEMA = {
+  type: 'OBJECT',
+  properties: {
+    items: {
+      type: 'ARRAY',
+      items: {
+        type: 'OBJECT',
+        properties: {
+          id: { type: 'STRING' },
+          title: { type: 'STRING' },
+          detail: { type: 'STRING' },
+          impact: { type: 'STRING' },
+          category: {
+            type: 'STRING',
+            enum: ['routines', 'indoor hacks', 'greener alternatives'],
+          },
+        },
+        required: ['title', 'detail', 'impact', 'category'],
+      },
+    },
+  },
+  required: ['items'],
+} as const;
+
+const TIMEOUT_PER_ATTEMPT_MS = 14_000;
+const RETRY_DELAY_MS = 400;
 
 const VALID_CPCB_CATEGORIES = new Set([
   'Good',
@@ -159,40 +185,76 @@ REQUIREMENTS:
 
     const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${encodeURIComponent(apiKey)}`;
 
-    const geminiRes = await fetchWithTimeout(
-      geminiUrl,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            responseMimeType: 'application/json',
-            thinkingConfig: {
-              thinkingLevel: 'minimal',
-            },
-          },
-        }),
+    const payload = JSON.stringify({
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: {
+        responseMimeType: 'application/json',
+        responseSchema: PLAN_RESPONSE_SCHEMA,
+        thinkingConfig: {
+          thinkingLevel: 'minimal',
+        },
       },
-      TIMEOUT_PLAN_MS
-    );
+    });
 
-    if (!geminiRes.ok) {
-      sendError(res, 502, 'Failed to communicate with AI provider.');
+    let lastError: Error | null = null;
+    let parsedData: { readonly items?: unknown } | null = null;
+
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      try {
+        const geminiRes = await fetchWithTimeout(
+          geminiUrl,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: payload,
+          },
+          TIMEOUT_PER_ATTEMPT_MS
+        );
+
+        if (!geminiRes.ok) {
+          // Never retry permanent client/auth errors (400, 401, 403, 404)
+          if ([400, 401, 403, 404].includes(geminiRes.status)) {
+            sendError(res, 502, `AI provider rejected request with HTTP ${geminiRes.status}.`);
+            return;
+          }
+          throw new Error(`AI provider error HTTP ${geminiRes.status}`);
+        }
+
+        const geminiData = (await geminiRes.json()) as GeminiResponse;
+        const text = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
+
+        if (!text) {
+          throw new Error('Empty response returned by AI provider.');
+        }
+
+        const cleanText = text.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+        parsedData = JSON.parse(cleanText) as { readonly items?: unknown };
+        break;
+      } catch (err: unknown) {
+        lastError = err instanceof Error ? err : new Error(String(err));
+        if (attempt === 1) {
+          await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
+        }
+      }
+    }
+
+    if (!parsedData) {
+      const isTimeout =
+        lastError !== null &&
+        (lastError.name === 'TimeoutError' ||
+          lastError.name === 'AbortError' ||
+          lastError.message.toLowerCase().includes('timeout'));
+      const isEmpty = lastError !== null && lastError.message.includes('Empty response');
+      const message = isTimeout
+        ? 'AI provider response timed out.'
+        : isEmpty
+        ? 'Empty response returned by AI provider.'
+        : 'Failed to communicate with AI provider.';
+      sendError(res, isTimeout ? 504 : 502, message);
       return;
     }
 
-    const geminiData = (await geminiRes.json()) as GeminiResponse;
-    const text = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
-
-    if (!text) {
-      sendError(res, 502, 'Empty response returned by AI provider.');
-      return;
-    }
-
-    const cleanText = text.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
-    const parsed = JSON.parse(cleanText) as { readonly items?: unknown };
-    sendJson(res, 200, parsed);
+    sendJson(res, 200, parsedData);
   } catch (err: unknown) {
     const isTimeout = err instanceof Error && (err.name === 'TimeoutError' || err.name === 'AbortError');
     const message = isTimeout

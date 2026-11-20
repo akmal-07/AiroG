@@ -4,14 +4,16 @@ import type { DayPlan, PlanItem, PlanRequestBody } from '@/types';
 /**
  * Strict Zod validation schemas for AI-generated and fallback daily plans.
  */
-export const PlanCategorySchema = z.enum([
-  'routines',
-  'indoor hacks',
-  'greener alternatives',
-]);
+export const PlanCategorySchema = z.preprocess(
+  (val) => (typeof val === 'string' ? val.trim().toLowerCase() : val),
+  z.enum(['routines', 'indoor hacks', 'greener alternatives'])
+);
 
 export const PlanItemSchema = z.object({
-  id: z.string().optional().default(() => Math.random().toString(36).substring(2, 9)),
+  id: z
+    .unknown()
+    .optional()
+    .transform((v) => (typeof v === 'string' && v.trim() ? v.trim() : Math.random().toString(36).substring(2, 9))),
   title: z.string().min(1, 'Title is required'),
   detail: z.string().min(1, 'Detail is required'),
   impact: z.string().min(1, 'Impact description is required'),
@@ -19,7 +21,7 @@ export const PlanItemSchema = z.object({
 });
 
 export const PlanResponseSchema = z.object({
-  items: z.array(PlanItemSchema).min(5, 'Must provide at least 5 items').max(8, 'Maximum 8 items allowed'),
+  items: z.array(PlanItemSchema).min(1, 'Must provide at least 1 item'),
 });
 
 /**
@@ -148,6 +150,8 @@ export function generateRuleBasedPlan(req: PlanRequestBody): DayPlan {
   };
 }
 
+const CLIENT_PLAN_TIMEOUT_MS = 28_000;
+
 /**
  * Calls /api/plan to generate an AI plan.
  * Validates output against Zod schema.
@@ -157,12 +161,19 @@ export function generateRuleBasedPlan(req: PlanRequestBody): DayPlan {
 export async function fetchDayPlan(req: PlanRequestBody, signal?: AbortSignal): Promise<DayPlan> {
   const tryFetchFromApi = async (): Promise<PlanItem[] | null> => {
     if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
+
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), CLIENT_PLAN_TIMEOUT_MS);
+    if (signal) {
+      signal.addEventListener('abort', () => controller.abort(), { once: true });
+    }
+
     try {
       const res = await fetch('/api/plan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(req),
-        signal,
+        signal: controller.signal,
       });
 
       if (!res.ok) {
@@ -178,8 +189,10 @@ export async function fetchDayPlan(req: PlanRequestBody, signal?: AbortSignal): 
 
       return null;
     } catch (err: unknown) {
-      if (err instanceof Error && err.name === 'AbortError') throw err;
+      if (err instanceof Error && err.name === 'AbortError' && signal?.aborted) throw err;
       return null;
+    } finally {
+      clearTimeout(timer);
     }
   };
 
@@ -188,7 +201,7 @@ export async function fetchDayPlan(req: PlanRequestBody, signal?: AbortSignal): 
   try {
     items = await tryFetchFromApi();
   } catch (err: unknown) {
-    if (err instanceof Error && err.name === 'AbortError') throw err;
+    if (err instanceof Error && err.name === 'AbortError' && signal?.aborted) throw err;
   }
 
   // Retry once if failed or invalid shape
@@ -196,7 +209,7 @@ export async function fetchDayPlan(req: PlanRequestBody, signal?: AbortSignal): 
     try {
       items = await tryFetchFromApi();
     } catch (err: unknown) {
-      if (err instanceof Error && err.name === 'AbortError') throw err;
+      if (err instanceof Error && err.name === 'AbortError' && signal?.aborted) throw err;
     }
   }
 
@@ -204,13 +217,13 @@ export async function fetchDayPlan(req: PlanRequestBody, signal?: AbortSignal): 
     throw new DOMException('Aborted', 'AbortError');
   }
 
-  // If valid AI items received after retry
-  if (items && items.length >= 5 && items.length <= 8) {
+  // If valid AI items received after retry (accepting at least 1 item and capping to 8)
+  if (items && items.length > 0) {
     return {
       date: new Date().toISOString().split('T')[0] ?? 'Today',
       city: req.city,
       aqi: req.aqi,
-      items,
+      items: items.slice(0, 8),
       planType: 'ai-generated',
       isFallback: false,
     };

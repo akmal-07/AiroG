@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import {
   generateRuleBasedPlan,
   PlanResponseSchema,
@@ -6,35 +6,36 @@ import {
 } from '../api/plan';
 import type { PlanRequestBody } from '@/types';
 
+const mockRequest: PlanRequestBody = {
+  city: 'Delhi',
+  aqi: 312,
+  pm25: 135.3,
+  pm10: 275.0,
+  category: 'Very Poor',
+  bestWindow: {
+    startHour: '2:00 PM',
+    endHour: '4:00 PM',
+    windowText: '2:00 PM – 4:00 PM',
+    averageAqi: 235,
+    category: 'Poor',
+    peakHour: '8:00 PM',
+    peakAqi: 368,
+    peakCategory: 'Very Poor',
+  },
+  peak: {
+    hour: '8:00 PM',
+    aqi: 368,
+  },
+  household: {
+    adults: 2,
+    children: 2,
+    elders: 1,
+    hasAsthma: true,
+    hasPurifier: true,
+  },
+};
+
 describe('Deterministic Plan Fallback Engine', () => {
-  const mockRequest: PlanRequestBody = {
-    city: 'Delhi',
-    aqi: 312,
-    pm25: 135.3,
-    pm10: 275.0,
-    category: 'Very Poor',
-    bestWindow: {
-      startHour: '2:00 PM',
-      endHour: '4:00 PM',
-      windowText: '2:00 PM – 4:00 PM',
-      averageAqi: 235,
-      category: 'Poor',
-      peakHour: '8:00 PM',
-      peakAqi: 368,
-      peakCategory: 'Very Poor',
-    },
-    peak: {
-      hour: '8:00 PM',
-      aqi: 368,
-    },
-    household: {
-      adults: 2,
-      children: 2,
-      elders: 1,
-      hasAsthma: true,
-      hasPurifier: true,
-    },
-  };
 
   it('generates 5 to 8 categorized items for Very Poor smog with vulnerable family members', () => {
     const plan = generateRuleBasedPlan(mockRequest);
@@ -103,14 +104,24 @@ describe('Zod Schema Validation', () => {
     expect(parsed.success).toBe(true);
   });
 
-  it('rejects plans with fewer than 5 items', () => {
+  it('rejects plans with empty items array', () => {
     const invalidPayload = {
-      items: [
-        { id: '1', title: 'A', detail: 'B', impact: 'C', category: 'routines' },
-      ],
+      items: [],
     };
     const parsed = PlanResponseSchema.safeParse(invalidPayload);
     expect(parsed.success).toBe(false);
+  });
+
+  it('tolerates category capitalization and generates missing IDs', () => {
+    const payload = {
+      items: [
+        { title: 'Action 1', detail: 'Detail 1', impact: 'Impact 1', category: 'Routines ' },
+      ],
+    };
+    const parsed = PlanResponseSchema.safeParse(payload);
+    expect(parsed.success).toBe(true);
+    expect(parsed.data?.items[0]?.category).toBe('routines');
+    expect(parsed.data?.items[0]?.id).toBeDefined();
   });
 
   it('rejects unrecognized plan categories', () => {
@@ -123,5 +134,64 @@ describe('Zod Schema Validation', () => {
     };
     const parsed = PlanItemSchema.safeParse(invalidItem);
     expect(parsed.success).toBe(false);
+  });
+
+  it('verifies a realistic gemini-3.5-flash-lite response parses cleanly through fetchDayPlan as an AI-tailored plan', async () => {
+    const realisticGeminiPayload = {
+      items: [
+        {
+          id: 'gemini-1',
+          title: 'Morning Window Seal',
+          detail: 'Keep external windows shut during the early morning cold inversion.',
+          impact: 'Prevents high particulate infiltration into the home.',
+          category: 'routines',
+        },
+        {
+          id: 'gemini-2',
+          title: 'Afternoon Errand Run',
+          detail: 'Schedule quick grocery trips between 1:00 PM and 3:00 PM.',
+          impact: 'Takes advantage of the lower afternoon smog band.',
+          category: 'routines',
+        },
+        {
+          id: 'gemini-3',
+          title: 'HEPA Purifier Scheduling',
+          detail: 'Run the mechanical filter on auto mode in the living room.',
+          impact: 'Continuously scrubs airborne particulates indoors.',
+          category: 'indoor hacks',
+        },
+        {
+          id: 'gemini-4',
+          title: 'Damp Mopping',
+          detail: 'Wet mop floors rather than sweeping with a broom.',
+          impact: 'Avoids resuspending settled dust.',
+          category: 'indoor hacks',
+        },
+        {
+          id: 'gemini-5',
+          title: 'Shared Transit Commute',
+          detail: 'Take the metro instead of an open three-wheeler.',
+          impact: 'Reduces direct roadway exhaust exposure.',
+          category: 'greener alternatives',
+        },
+      ],
+    };
+
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => realisticGeminiPayload,
+    });
+
+    try {
+      const { fetchDayPlan } = await import('../api/plan');
+      const plan = await fetchDayPlan(mockRequest);
+      expect(plan.planType).toBe('ai-generated');
+      expect(plan.isFallback).toBe(false);
+      expect(plan.items).toHaveLength(5);
+      expect(plan.items[0]?.title).toBe('Morning Window Seal');
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
   });
 });
