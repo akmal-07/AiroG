@@ -144,7 +144,7 @@ describe('Serverless Handler: /api/plan', () => {
     expect(getResult3().statusCode).toBe(400);
   });
 
-  it('sends thinkingConfig: { thinkingLevel: "minimal" } to Gemini 3.5 Flash-Lite to eliminate reasoning latency', async () => {
+  it('sends thinkingConfig: { thinkingLevel: "minimal" } and maxOutputTokens: 1024 to Gemini 3.5 Flash-Lite to eliminate reasoning latency', async () => {
     process.env['GEMINI_API_KEY'] = 'test-gemini-key';
 
     const captured: {
@@ -208,6 +208,7 @@ describe('Serverless Handler: /api/plan', () => {
       thinkingConfig: {
         thinkingLevel: 'minimal',
       },
+      maxOutputTokens: 1024,
     });
     expect(captured.requestBody?.generationConfig).not.toHaveProperty('temperature');
     expect(captured.requestBody?.generationConfig).not.toHaveProperty('thinkingBudget');

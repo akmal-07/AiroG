@@ -1,12 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { CitySearchAutocomplete } from './CitySearchAutocomplete';
-import { subscribePlanLoading } from '@/app/hooks/useAirQualityDashboard';
 
 export interface CitySearchBarProps {
   readonly cityInput: string;
   readonly activeCity: string;
   readonly loadingAqi: boolean;
-  readonly loadingPlan?: boolean;
   readonly popularCities: readonly string[];
   readonly searchError?: string | null;
   readonly onChangeCityInput: (value: string) => void;
@@ -17,26 +15,18 @@ export interface CitySearchBarProps {
 /**
  * Apple-grade city search bar with real-time geocoding autocomplete
  * and one-tap quick-selection pills for major Indian metropolitan areas.
+ * Quick-select pills remain interactive during plan generation (disabled only during loadingAqi).
  */
 export const CitySearchBar: React.FC<CitySearchBarProps> = ({
   cityInput,
   activeCity,
   loadingAqi,
-  loadingPlan = false,
   popularCities,
   searchError,
   onChangeCityInput,
   onSelectCity,
   onSubmit,
 }) => {
-  const [internalLoadingPlan, setInternalLoadingPlan] = useState(false);
-
-  useEffect(() => {
-    return subscribePlanLoading(setInternalLoadingPlan);
-  }, []);
-
-  const isBusy = loadingAqi || loadingPlan || internalLoadingPlan;
-
   return (
     <section
       aria-labelledby="city-search-heading"
@@ -52,14 +42,14 @@ export const CitySearchBar: React.FC<CitySearchBarProps> = ({
           onChange={onChangeCityInput}
           onSelect={onSelectCity}
           onSubmit={() => onSelectCity(cityInput)}
-          disabled={isBusy}
+          disabled={loadingAqi}
         />
         <button
           type="submit"
-          disabled={isBusy}
+          disabled={loadingAqi}
           className="inline-flex items-center justify-center rounded-2xl bg-accent-blue hover:opacity-90 px-6 py-3 text-sm font-semibold text-white shadow-xs transition active:scale-98 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-blue disabled:opacity-50"
         >
-          {loadingAqi ? 'Checking...' : isBusy ? 'Drafting...' : 'Check Air Quality'}
+          {loadingAqi ? 'Checking...' : 'Check Air Quality'}
         </button>
       </form>
 
@@ -79,7 +69,7 @@ export const CitySearchBar: React.FC<CitySearchBarProps> = ({
                 key={c}
                 type="button"
                 aria-pressed={isSelected}
-                disabled={isBusy}
+                disabled={loadingAqi}
                 onClick={() => onSelectCity(c)}
                 className={`rounded-full px-3.5 py-1 text-xs font-semibold transition active:scale-95 focus-visible:outline-2 focus-visible:outline-accent-blue disabled:opacity-50 disabled:cursor-not-allowed ${
                   isSelected

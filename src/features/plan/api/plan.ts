@@ -25,6 +25,33 @@ export const PlanResponseSchema = z.object({
 });
 
 /**
+ * In-memory 5-minute plan cache to eliminate duplicate AI generation latency.
+ * Capped at 30 entries (FIFO eviction).
+ * ONLY caches successful AI-tailored plans (never caches fallback standard plans).
+ */
+interface CachedPlan {
+  readonly plan: DayPlan;
+  readonly timestamp: number;
+}
+
+const PLAN_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+const MAX_CACHE_ENTRIES = 30;
+const planCache = new Map<string, CachedPlan>();
+
+export function clearPlanCache(): void {
+  planCache.clear();
+}
+
+export function createPlanCacheKey(req: PlanRequestBody): string {
+  const normCity = req.city.trim().toLowerCase();
+  const h = req.household;
+  const householdKey = `${h.adults}_${h.children}_${h.elders}_${h.hasAsthma ? 1 : 0}_${h.hasPurifier ? 1 : 0}`;
+  const windowKey = req.bestWindow.windowText.trim().toLowerCase();
+  const catKey = req.category.trim().toLowerCase();
+  return `${normCity}|${req.aqi}|${catKey}|${windowKey}|${householdKey}`;
+}
+
+/**
  * Deterministically generates a sensible, rule-based day plan tailored to:
  * - CPCB AQI band
  * - Household demographics (kids, elders, asthma, air purifier)
@@ -155,10 +182,21 @@ const CLIENT_PLAN_TIMEOUT_MS = 28_000;
 /**
  * Calls /api/plan to generate an AI plan.
  * Validates output against Zod schema.
+ * Caches successful AI plans in memory for 5 minutes (0ms return on cache hit).
  * Retries once if AI output is malformed or invalid.
  * Falls back to deterministic rule-based plan if proxy is unavailable or validation fails twice.
  */
 export async function fetchDayPlan(req: PlanRequestBody, signal?: AbortSignal): Promise<DayPlan> {
+  const cacheKey = createPlanCacheKey(req);
+  const cached = planCache.get(cacheKey);
+
+  if (cached) {
+    if (Date.now() - cached.timestamp < PLAN_CACHE_TTL_MS) {
+      return cached.plan;
+    }
+    planCache.delete(cacheKey);
+  }
+
   const tryFetchFromApi = async (): Promise<PlanItem[] | null> => {
     if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
 
@@ -219,7 +257,7 @@ export async function fetchDayPlan(req: PlanRequestBody, signal?: AbortSignal): 
 
   // If valid AI items received after retry (accepting at least 1 item and capping to 8)
   if (items && items.length > 0) {
-    return {
+    const aiPlan: DayPlan = {
       date: new Date().toISOString().split('T')[0] ?? 'Today',
       city: req.city,
       aqi: req.aqi,
@@ -227,8 +265,17 @@ export async function fetchDayPlan(req: PlanRequestBody, signal?: AbortSignal): 
       planType: 'ai-generated',
       isFallback: false,
     };
+
+    // Cache successful AI plan in memory (never cache fallback standard plans)
+    if (planCache.size >= MAX_CACHE_ENTRIES) {
+      const oldestKey = planCache.keys().next().value;
+      if (oldestKey) planCache.delete(oldestKey);
+    }
+    planCache.set(cacheKey, { plan: aiPlan, timestamp: Date.now() });
+
+    return aiPlan;
   }
 
-  // Fallback to deterministic rule-based plan
+  // Fallback to deterministic rule-based plan (never cached)
   return generateRuleBasedPlan(req);
 }

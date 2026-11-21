@@ -162,10 +162,11 @@ Generate a tailored daily action plan for:
 - HEPA Air Purifier: ${household.hasPurifier ? 'YES' : 'NO'}
 
 REQUIREMENTS:
-1. Provide exactly 5 to 8 concrete, practical plan items distributed across these 3 categories:
-   - "routines" (daily habits, window opening/closing schedule, shifting errands)
-   - "indoor hacks" (air purifier usage, wet mopping, cooking ventilation, indoor isolation)
-   - "greener alternatives" (commute modes, avoiding open burning, reducing household emissions)
+1. Provide exactly 5 concise, high-impact actions distributed across these 3 categories:
+   - "routines" (daily habits, window schedule, shifting errands to cleanest hours)
+   - "indoor hacks" (air purifier usage, clean sanctuary, damp mopping, cooking ventilation)
+   - "greener alternatives" (low-emission commute, avoiding open burning, reducing domestic emissions)
+   With crisp 3-6 word titles and 1-2 short, actionable sentences per detail (no fluff).
 2. CRITICAL: Any outdoor activity (errands, walking, commuting) MUST be scheduled strictly inside the best window: "${bestWindow?.windowText ?? 'early afternoon'}" and the detail MUST explicitly name this window.
 3. Protect vulnerable family members (${household.children > 0 ? 'children, ' : ''}${household.elders > 0 ? 'elders, ' : ''}${household.hasAsthma ? 'asthma sufferers' : ''}) by restricting morning/evening outdoor exposure.
 4. Detail must be 1-2 actionable, concise sentences in plain words.
@@ -193,6 +194,7 @@ REQUIREMENTS:
         thinkingConfig: {
           thinkingLevel: 'minimal',
         },
+        maxOutputTokens: 1024,
       },
     });
 

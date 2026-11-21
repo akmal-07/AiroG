@@ -1,8 +1,10 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
   generateRuleBasedPlan,
   PlanResponseSchema,
   PlanItemSchema,
+  clearPlanCache,
+  fetchDayPlan,
 } from '../api/plan';
 import type { PlanRequestBody } from '@/types';
 
@@ -36,6 +38,10 @@ const mockRequest: PlanRequestBody = {
 };
 
 describe('Deterministic Plan Fallback Engine', () => {
+  beforeEach(() => {
+    clearPlanCache();
+    vi.restoreAllMocks();
+  });
 
   it('generates 5 to 8 categorized items for Very Poor smog with vulnerable family members', () => {
     const plan = generateRuleBasedPlan(mockRequest);
@@ -89,6 +95,11 @@ describe('Deterministic Plan Fallback Engine', () => {
 });
 
 describe('Zod Schema Validation', () => {
+  beforeEach(() => {
+    clearPlanCache();
+    vi.restoreAllMocks();
+  });
+
   it('validates compliant 5-8 item plan payloads', () => {
     const validPayload = {
       items: [
@@ -184,12 +195,67 @@ describe('Zod Schema Validation', () => {
     });
 
     try {
-      const { fetchDayPlan } = await import('../api/plan');
       const plan = await fetchDayPlan(mockRequest);
       expect(plan.planType).toBe('ai-generated');
       expect(plan.isFallback).toBe(false);
       expect(plan.items).toHaveLength(5);
       expect(plan.items[0]?.title).toBe('Morning Window Seal');
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  it('hits the 5-minute cache on repeated calls with zero additional network fetches and avoids caching fallback plans', async () => {
+    let fetchCount = 0;
+    const originalFetch = globalThis.fetch;
+
+    globalThis.fetch = vi.fn().mockImplementation(() => {
+      fetchCount++;
+      return Promise.resolve({
+        ok: true,
+        json: async () => ({
+          items: [
+            {
+              id: 'cached-1',
+              title: 'Sealed Windows',
+              detail: 'Keep shut in morning.',
+              impact: 'Cuts soot',
+              category: 'routines',
+            },
+          ],
+        }),
+      });
+    });
+
+    try {
+      // 1. Initial successful AI plan fetch
+      const plan1 = await fetchDayPlan(mockRequest);
+      expect(plan1.planType).toBe('ai-generated');
+      expect(fetchCount).toBe(1);
+
+      // 2. Second fetch with identical inputs should hit cache immediately with zero fetch calls
+      const plan2 = await fetchDayPlan(mockRequest);
+      expect(plan2.planType).toBe('ai-generated');
+      expect(fetchCount).toBe(1); // Still 1! Cache hit!
+      expect(plan2.items[0]?.title).toBe('Sealed Windows');
+
+      // 3. Fallback plans must NOT be cached
+      clearPlanCache();
+      globalThis.fetch = vi.fn().mockImplementation(() => {
+        fetchCount++;
+        return Promise.resolve({ ok: false, status: 500 });
+      });
+
+      const fallbackPlan1 = await fetchDayPlan(mockRequest);
+      expect(fallbackPlan1.planType).toBe('standard plan');
+      expect(fallbackPlan1.isFallback).toBe(true);
+      const countAfterFallback1 = fetchCount;
+
+      const fallbackPlan2 = await fetchDayPlan(mockRequest);
+      expect(fallbackPlan2.planType).toBe('standard plan');
+      expect(fallbackPlan2.isFallback).toBe(true);
+      // A second call for failed response must attempt fetch again (not cached)
+      expect(fetchCount).toBeGreaterThan(countAfterFallback1);
     } finally {
       globalThis.fetch = originalFetch;
     }

@@ -20,17 +20,6 @@ export function isSequenceCurrent(responseSeq: number, currentSeq: number): bool
   return responseSeq === currentSeq;
 }
 
-let globalPlanLoading = false;
-const planLoadingListeners = new Set<(loading: boolean) => void>();
-
-export function subscribePlanLoading(listener: (loading: boolean) => void): () => void {
-  planLoadingListeners.add(listener);
-  listener(globalPlanLoading);
-  return () => {
-    planLoadingListeners.delete(listener);
-  };
-}
-
 /**
  * Sanitizes and validates user city input (max 60 chars, trimmed, stripped of unsafe symbols).
  */
@@ -58,11 +47,6 @@ export function useAirQualityDashboard() {
   const [loadingPlan, setLoadingPlan] = useState(false);
   const [planError, setPlanError] = useState<string | null>(null);
 
-  useEffect(() => {
-    globalPlanLoading = loadingPlan;
-    planLoadingListeners.forEach((fn) => fn(loadingPlan));
-  }, [loadingPlan]);
-
   // Persistent live announcement for assistive technologies
   const [liveAnnouncement, setLiveAnnouncement] = useState('Welcome to AiroG.');
 
@@ -70,6 +54,7 @@ export function useAirQualityDashboard() {
   const requestSeqRef = useRef(0);
   const aqiAbortRef = useRef<AbortController | null>(null);
   const planAbortRef = useRef<AbortController | null>(null);
+  const householdDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const loadPlanForCurrentState = useCallback(
     async (currentAqi: AqiFetchResult, currentHousehold: Household, targetSeq?: number) => {
@@ -148,6 +133,12 @@ export function useAirQualityDashboard() {
       const sanitized = sanitizeCityInput(rawCityName);
       if (!sanitized) return;
 
+      // Cancel any pending debounced household request on city switch
+      if (householdDebounceRef.current) {
+        clearTimeout(householdDebounceRef.current);
+        householdDebounceRef.current = null;
+      }
+
       const seq = ++requestSeqRef.current;
       if (aqiAbortRef.current) aqiAbortRef.current.abort();
       if (planAbortRef.current) planAbortRef.current.abort();
@@ -192,16 +183,48 @@ export function useAirQualityDashboard() {
 
   useEffect(() => {
     void loadCityData('Delhi');
+    return () => {
+      if (householdDebounceRef.current) {
+        clearTimeout(householdDebounceRef.current);
+      }
+    };
   }, [loadCityData]);
 
   const handleHouseholdChange = useCallback(
     (updated: Household) => {
+      // 1. Update household state immediately (0ms response for checkboxes and inputs)
       setHousehold(updated);
+
+      // 2. Recalculate existing plan items & exposure score immediately in 0ms (via cached impact module)
+      if (plan && aqiResult) {
+        void import('@/features/plan/utils/impact').then(({ computeItemImpact, generateDaySummary }) => {
+          setPlan((prev) => {
+            if (!prev) return null;
+            const items = prev.items.map((item) => ({
+              ...item,
+              computedImpact: computeItemImpact(item, aqiResult.reading.category, updated),
+            }));
+            return {
+              ...prev,
+              items,
+              summary: generateDaySummary(aqiResult.reading.aqi, aqiResult.reading.category, updated, items),
+            };
+          });
+        });
+      }
+
+      // 3. Debounce the /api/plan Gemini fetch by 350ms so rapid multi-clicks fire 1 request
+      if (householdDebounceRef.current) {
+        clearTimeout(householdDebounceRef.current);
+      }
+
       if (aqiResult) {
-        void loadPlanForCurrentState(aqiResult, updated);
+        householdDebounceRef.current = setTimeout(() => {
+          void loadPlanForCurrentState(aqiResult, updated);
+        }, 350);
       }
     },
-    [aqiResult, loadPlanForCurrentState]
+    [aqiResult, plan, loadPlanForCurrentState]
   );
 
   const handleCityInputChange = (value: string) => {
